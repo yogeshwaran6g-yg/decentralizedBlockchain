@@ -9,16 +9,12 @@ export default {
         extend: {
             colors: {
                 "primary": "#0b0b0f",
-                "accent-gold": "#D4AF37",
-                "accent-gold-light": "#F9E076",
-                "gold-start": "#D4AF37",
-                "gold-end": "#FFD700",
-                "silver": "#C0C0C0",
                 "background-light": "#f7f7f7",
-                "background-dark": "#17171b",
-                "card-glass": "rgba(23, 23, 27, 0.7)",
+                "background-dark": "#0b0b0f",
                 "gold-glow": "#D4AF37",
                 "gold-bright": "#FFD700",
+                "glass": "rgba(255, 255, 255, 0.03)",
+                "glass-border": "rgba(255, 255, 255, 0.1)",
             },
             fontFamily: {
                 "sans": ["Inter", "sans-serif"],
