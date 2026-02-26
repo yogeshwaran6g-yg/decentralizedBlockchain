@@ -162,10 +162,15 @@ const ReferralDashboard = () => {
                                         }}
                                     >
                                         <motion.div
-                                            className="absolute"
+                                            className="absolute pointer-events-none"
                                             style={{
                                                 top: '50%',
                                                 left: '100%',
+                                                width: 0,
+                                                height: 0,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
                                                 transformStyle: 'preserve-3d'
                                             }}
                                             animate={{ rotateZ: -360 }}
@@ -177,8 +182,9 @@ const ReferralDashboard = () => {
                                             }}
                                         >
                                             <div
+                                                className="pointer-events-auto"
                                                 style={{
-                                                    transform: 'translate(-50%, -50%) rotateX(-50deg)',
+                                                    transform: 'rotateX(-50deg)',
                                                     transformStyle: 'preserve-3d'
                                                 }}
                                             >
@@ -211,11 +217,12 @@ const ReferralDashboard = () => {
 
                         {/* Central Sun/User */}
                         <div
-                            className="absolute z-50 flex flex-col items-center"
+                            className="absolute z-50"
                             style={{
                                 top: '50%',
                                 left: '50%',
-                                transform: 'translate(-50%, -50%) rotateX(-50deg)'
+                                transform: 'translate(-50%, -50%) rotateX(-50deg)',
+                                transformStyle: 'preserve-3d'
                             }}
                         >
                             <motion.div
@@ -239,7 +246,8 @@ const ReferralDashboard = () => {
                                 <div className="absolute inset-0 border-2 border-white/20 rounded-full animate-ping opacity-10"></div>
                             </motion.div>
 
-                            <div className="mt-4 text-center">
+                            {/* Central Node Label - Positioned absolutely to not affect centering */}
+                            <div className="absolute top-full mt-4 left-1/2 -translate-x-1/2 text-center w-max pointer-events-none">
                                 <p className="text-[10px] font-black gold-gradient-text uppercase tracking-[0.2em] drop-shadow-lg">NODE CONTROLLER</p>
                                 <p className="text-[8px] text-silver/60 font-bold mt-0.5 uppercase">Network Core</p>
                             </div>
@@ -334,7 +342,7 @@ const ReferralDashboard = () => {
                     </table>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
