@@ -1,6 +1,38 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ReferralDashboard = () => {
+    const [hoveredNode, setHoveredNode] = React.useState(null);
+
+    const orbitData = [
+        { id: 'inner', size: 240, duration: 25, planets: [{ id: 'l1-1', size: 52, color: '#FF8C00', delay: 0, label: 'L1: 24 Users', detail: '10% Yield Sharing' }] },
+        {
+            id: 'mid', size: 400, duration: 45, planets: [
+                { id: 'l2-1', size: 42, color: '#FF4500', delay: 0, label: 'L2: 120 Users', detail: '5% Indirect' },
+                { id: 'l2-2', size: 38, color: '#FFA500', delay: 180, label: 'L2: Active Node', detail: 'Relay Active' }
+            ]
+        },
+        {
+            id: 'outer', size: 560, duration: 65, planets: [
+                { id: 'l3-1', size: 32, color: '#FFD700', delay: 0, label: 'L3: 1,306 Users', detail: '2% Global' },
+                { id: 'l3-2', size: 30, color: '#B08D57', delay: 120, label: 'L3: Inactive', detail: 'Waiting for Sync' },
+                { id: 'l3-3', size: 28, color: '#C0C0C0', delay: 240, label: 'L3: Peer-to-Peer', detail: 'Encrypted Link' }
+            ]
+        },
+    ];
+
+    const generateStars = () => {
+        return Array.from({ length: 50 }).map((_, i) => ({
+            id: i,
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            size: Math.random() * 2 + 1,
+            opacity: Math.random() * 0.5 + 0.1,
+            duration: Math.random() * 3 + 2
+        }));
+    };
+    const stars = React.useMemo(() => generateStars(), []);
+
     return (
         <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-1 sm:p-0">
             {/* Stats Row */}
@@ -48,7 +80,6 @@ const ReferralDashboard = () => {
                     <button
                         onClick={() => {
                             navigator.clipboard.writeText('refer.network/user/0x71c...4f92');
-                            // Add toast or feedback here if available
                         }}
                         className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-gold-start/30 text-gold-start text-[9px] sm:text-[10px] font-bold hover:bg-gold-start hover:text-primary transition-all active:scale-95 shadow-lg shadow-gold-start/5"
                     >
@@ -59,10 +90,10 @@ const ReferralDashboard = () => {
             </div>
 
             {/* Orbital Section */}
-            <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 overflow-hidden relative">
+            <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 overflow-hidden relative min-h-[500px] flex flex-col">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gold-start/5 blur-[100px] -z-10"></div>
 
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 gap-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 relative z-20 gap-3">
                     <h2 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-2 sm:gap-3">
                         <span className="material-symbols-outlined text-gold-start text-base sm:text-xl">star</span>
                         <span className="truncate">NETWORK ARCHITECTURE</span>
@@ -75,48 +106,180 @@ const ReferralDashboard = () => {
                     </div>
                 </div>
 
-                <div className="relative h-[320px] sm:h-[400px] lg:h-[500px] flex items-center justify-center">
-                    <div className="orbit-container scale-[0.45] sm:scale-[0.65] md:scale-[0.85] lg:scale-100 flex items-center justify-center transition-transform duration-500 absolute inset-0 m-auto">
-                        {/* Orbit Rings */}
-                        <div className="orbit-ring w-[180px] h-[180px] orbit-rotate-fast opacity-40"></div>
-                        <div className="orbit-ring w-[320px] h-[320px] orbit-rotate-medium opacity-30"></div>
-                        <div className="orbit-ring w-[460px] h-[460px] orbit-rotate-slow opacity-20"></div>
+                <div className="relative flex-grow flex items-center justify-center perspective-[2000px] py-12">
+                    {/* Star Field Background */}
+                    <div className="absolute inset-0 pointer-events-none">
+                        {stars.map(star => (
+                            <motion.div
+                                key={star.id}
+                                className="absolute bg-white rounded-full"
+                                style={{
+                                    top: star.top,
+                                    left: star.left,
+                                    width: star.size,
+                                    height: star.size,
+                                    opacity: star.opacity
+                                }}
+                                animate={{ opacity: [star.opacity, star.opacity * 2, star.opacity] }}
+                                transition={{ duration: star.duration, repeat: Infinity }}
+                            />
+                        ))}
+                    </div>
 
-                        {/* Level 3 Planets */}
-                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center group/planet">
-                            <div className="size-6 bg-silver rounded-full planet-glow border-2 border-primary cursor-help"></div>
-                            <span className="mt-2 text-[10px] font-bold text-silver/60 whitespace-nowrap opacity-0 group-hover/planet:opacity-100 transition-opacity">L3: 1,306 Users (2%)</span>
-                        </div>
+                    {/* Perspective Container */}
+                    <div className="relative w-full h-full flex items-center justify-center transform-gpu" style={{ transformStyle: 'preserve-3d', transform: 'rotateX(50deg)' }}>
 
-                        {/* Level 2 Planets */}
-                        <div className="absolute top-1/4 left-16 flex flex-col items-center group/planet">
-                            <div className="size-10 bg-silver/80 rounded-full planet-glow border-2 border-primary cursor-help"></div>
-                            <span className="mt-2 text-[10px] font-bold text-silver/80 whitespace-nowrap opacity-0 group-hover/planet:opacity-100 transition-opacity">L2: 120 Users (5%)</span>
-                        </div>
-                        <div className="absolute bottom-1/4 right-20 flex flex-col items-center group/planet">
-                            <div className="size-10 bg-silver/60 rounded-full planet-glow border-2 border-primary cursor-help"></div>
-                            <span className="mt-2 text-[10px] font-bold text-silver/80 whitespace-nowrap opacity-0 group-hover/planet:opacity-100 transition-opacity">L2: Active Node</span>
-                        </div>
-
-                        {/* Level 1 Planets */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-32 -translate-y-24 flex flex-col items-center group/planet">
-                            <div className="size-14 gold-gradient-bg rounded-full planet-glow border-4 border-primary shadow-xl cursor-help"></div>
-                            <span className="mt-2 text-[10px] font-bold text-gold-start whitespace-nowrap opacity-0 group-hover/planet:opacity-100 transition-opacity">L1: 24 Users (10%)</span>
-                        </div>
-
-                        {/* Central SUN */}
-                        <div className="relative z-10 flex flex-col items-center group/sun">
-                            <div className="size-20 sm:size-24 gold-gradient-bg rounded-full sun-glow border-[4px] sm:border-[6px] border-primary flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95">
-                                <span className="material-symbols-outlined text-primary !text-3xl sm:!text-4xl font-black">person</span>
+                        {/* Orbit Rings and Planets */}
+                        {orbitData.map((orbit) => (
+                            <div
+                                key={orbit.id}
+                                className="absolute rounded-full border border-white/10"
+                                style={{
+                                    width: orbit.size,
+                                    height: orbit.size,
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    transformStyle: 'preserve-3d',
+                                    background: 'radial-gradient(circle, transparent 60%, rgba(255,255,255,0.03) 100%)'
+                                }}
+                            >
+                                {orbit.planets.map((planet) => (
+                                    <motion.div
+                                        key={planet.id}
+                                        className="absolute w-full h-full"
+                                        style={{
+                                            top: 0,
+                                            left: 0,
+                                            transformStyle: 'preserve-3d'
+                                        }}
+                                        animate={{ rotateZ: 360 }}
+                                        transition={{
+                                            duration: orbit.duration,
+                                            repeat: Infinity,
+                                            ease: "linear",
+                                            delay: -(planet.delay / 360) * orbit.duration
+                                        }}
+                                    >
+                                        <motion.div
+                                            className="absolute"
+                                            style={{
+                                                top: '50%',
+                                                left: '100%',
+                                                transformStyle: 'preserve-3d'
+                                            }}
+                                            animate={{ rotateZ: -360 }}
+                                            transition={{
+                                                duration: orbit.duration,
+                                                repeat: Infinity,
+                                                ease: "linear",
+                                                delay: -(planet.delay / 360) * orbit.duration
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    transform: 'translate(-50%, -50%) rotateX(-50deg)',
+                                                    transformStyle: 'preserve-3d'
+                                                }}
+                                            >
+                                                <motion.div
+                                                    className="cursor-pointer"
+                                                    whileHover={{ scale: 1.3 }}
+                                                    onHoverStart={() => setHoveredNode(planet)}
+                                                    onHoverEnd={() => setHoveredNode(null)}
+                                                >
+                                                    <div
+                                                        className="rounded-full gold-gradient-bg border-[3px] border-[#0a0a0a] relative"
+                                                        style={{
+                                                            width: planet.size,
+                                                            height: planet.size,
+                                                            boxShadow: `0 0 25px rgba(255, 140, 0, 0.4), inset 0 0 10px rgba(0,0,0,0.3)`
+                                                        }}
+                                                    >
+                                                        {/* Inner icon for consistency with center */}
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <span className="material-symbols-outlined text-black !text-[12px] opacity-40">person</span>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            </div>
+                                        </motion.div>
+                                    </motion.div>
+                                ))}
                             </div>
-                            <div className="mt-3 sm:mt-5 text-center transition-transform group-hover/sun:-translate-y-1">
-                                <p className="text-xs sm:text-sm font-black gold-gradient-text uppercase tracking-[0.2em]">YOU</p>
-                                <p className="text-[9px] sm:text-[10px] text-silver/40 font-bold mt-0.5">NODE CONTROLLER</p>
+                        ))}
+
+                        {/* Central Sun/User */}
+                        <div
+                            className="absolute z-50 flex flex-col items-center"
+                            style={{
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%) rotateX(-50deg)'
+                            }}
+                        >
+                            <motion.div
+                                className="size-20 sm:size-24 gold-gradient-bg rounded-full border-[6px] border-[#0a0a0a] flex items-center justify-center cursor-pointer relative"
+                                style={{
+                                    boxShadow: '0 0 50px rgba(255, 140, 0, 0.4), inset 0 0 15px rgba(0,0,0,0.3)'
+                                }}
+                                animate={{
+                                    scale: [1, 1.08, 1],
+                                    boxShadow: [
+                                        '0 0 40px rgba(255, 140, 0, 0.3)',
+                                        '0 0 70px rgba(255, 140, 0, 0.5)',
+                                        '0 0 40px rgba(255, 140, 0, 0.3)'
+                                    ]
+                                }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                <span className="material-symbols-outlined text-black !text-3xl font-black">person</span>
+
+                                {/* Inner glow particles */}
+                                <div className="absolute inset-0 border-2 border-white/20 rounded-full animate-ping opacity-10"></div>
+                            </motion.div>
+
+                            <div className="mt-4 text-center">
+                                <p className="text-[10px] font-black gold-gradient-text uppercase tracking-[0.2em] drop-shadow-lg">NODE CONTROLLER</p>
+                                <p className="text-[8px] text-silver/60 font-bold mt-0.5 uppercase">Network Core</p>
                             </div>
                         </div>
                     </div>
+
+                    {/* Interactive Info Overlay */}
+                    <AnimatePresence>
+                        {hoveredNode && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                className="absolute bottom-6 right-6 p-4 rounded-xl border border-white/10 z-[100] min-w-[160px]"
+                                style={{
+                                    background: 'rgba(11, 11, 15, 0.9)',
+                                    backdropFilter: 'blur(12px)',
+                                    boxShadow: `0 10px 30px rgba(0,0,0,0.5), 0 0 20px ${hoveredNode.color}22`
+                                }}
+                            >
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="size-2 rounded-full" style={{ backgroundColor: hoveredNode.color, boxShadow: `0 0 8px ${hoveredNode.color}` }}></div>
+                                    <p className="text-white text-[10px] font-black uppercase tracking-widest">{hoveredNode.label}</p>
+                                </div>
+                                <p className="text-silver/60 text-[9px] font-bold leading-relaxed">{hoveredNode.detail}</p>
+                                <div className="mt-3 overflow-hidden h-1 bg-white/5 rounded-full">
+                                    <motion.div
+                                        className="h-full"
+                                        style={{ backgroundColor: hoveredNode.color }}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: '100%' }}
+                                        transition={{ duration: 1 }}
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
+
 
 
             {/* Recent Referrals Table */}

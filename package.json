@@ -10,5 +10,7 @@
     "build:client": "pnpm --filter client build",
     "build:admin": "pnpm --filter admin build"
   },
-  "devDependencies": {}
+  "dependencies": {
+    "framer-motion": "^12.34.3"
+  }
 }
