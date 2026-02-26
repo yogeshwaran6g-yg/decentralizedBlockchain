@@ -1,7 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { authService } from '../utils/authService';
 
 const Header = ({ onMenuClick }) => {
-    const [connected, setConnected] = useState(false);
+    const [connected, setConnected] = useState(authService.isLoggedIn());
+    const [address, setAddress] = useState('');
+
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            setAddress(user.wallet_address);
+        }
+    }, [connected]);
+
+    const handleConnect = async () => {
+        try {
+            if (connected) {
+                authService.logout();
+                setConnected(false);
+                setAddress('');
+            } else {
+                const authData = await authService.login();
+                setConnected(true);
+                setAddress(authData.user.wallet_address);
+            }
+        } catch (error) {
+            console.error('Connection failed:', error);
+            alert('Authentication failed: ' + error.message);
+        }
+    };
+
+    const formatAddress = (addr) => {
+        if (!addr) return '';
+        return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+    };
 
     return (
         <header className="h-16 glass-panel border-b border-white/5 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-40">
@@ -16,7 +47,7 @@ const Header = ({ onMenuClick }) => {
                     <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tight">Status</span>
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-accent-gold-light bg-accent-gold/10 px-2 py-0.5 rounded border border-accent-gold/20">
-                            {connected ? '0x71C...4e2' : 'Disconnected'}
+                            {connected ? formatAddress(address) : 'Disconnected'}
                         </span>
                     </div>
                 </div>
@@ -39,7 +70,7 @@ const Header = ({ onMenuClick }) => {
                     <span className="absolute top-2 right-2 w-2 h-2 bg-accent-gold rounded-full"></span>
                 </button>
                 <button
-                    onClick={() => setConnected(!connected)}
+                    onClick={handleConnect}
                     className="h-10 px-3 sm:px-6 rounded-lg action-gradient-gold text-primary font-bold text-xs sm:text-sm tracking-wide shadow-[0_4px_15px_rgba(212,175,55,0.3)] hover:scale-[1.02] transition-transform"
                 >
                     {connected ? 'Disconnect' : 'Connect'}
