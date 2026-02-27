@@ -1,16 +1,20 @@
-# React + Vite
+# Luxe Ecosystem Dashboard - React Migration
+## Project Structure
+- `src/components/`: Contains reusable UI components.
+  - `Sidebar.tsx`: Navigation with active state management.
+  - `Header.tsx`: Wallet connection and status display.
+  - `StatsGrid.tsx`: Dynamic dashboard metrics.
+  - `Charts.tsx`: Data visualizations using SVG.
+  - `ActivityList.tsx`: Recent activity log.
+- `src/App.tsx`: Main layout and component assembly.
+- `src/index.css`: Global styles, Tailwind directives, and custom animations.
+- `tailwind.config.js`: Custom theme configuration.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## How to Run
+Once your local `npm` environment is configured, you can run:
 
-Currently, two official plugins are available:
+1. `npm install` - To install dependencies (React, Vite, Tailwind).
+2. `npm run dev` - To start the local development server.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Immediate Preview
+Since your local `npm` path currently has an issue, I have provided a **[preview.html](file:///c:/Users/prade/decentralizedBlockchain/decentralizedBlockchain/preview.html)** which contains the static version of the design for immediate high-fidelity viewing.

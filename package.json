@@ -1,5 +1,5 @@
 {
-  "name": "new-c",
+  "name": "decentralized-blockchain-workspace",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,9 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "client": "pnpm --filter client dev",
+    "admin": "pnpm --filter admin dev",
+    "server": "pnpm --filter server dev",
+    "build:client": "pnpm --filter client build",
+    "build:admin": "pnpm --filter admin build",
+    "seed": "pnpm --filter server seed"
   },
   "dependencies": {
+    "@reown/appkit": "^1.8.18",
+    "@reown/appkit-adapter-wagmi": "^1.8.18",
+    "@reown/appkit-adapter-wagmi": "^1.8.18",
     "@reown/appkit": "^1.8.18",
     "@reown/appkit-adapter-wagmi": "^1.8.18",
     "@tailwindcss/vite": "^4.2.1",
