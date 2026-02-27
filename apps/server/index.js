@@ -75,7 +75,7 @@ app.get("/api/health", async (req, res) => {
 });
 
 app.use("/api/users", userRoutes);
-app.use("/api/profile", profileRoutes);
+app.use("/api/v1/profile", profileRoutes);
 
 app.use(errorHandler);
 

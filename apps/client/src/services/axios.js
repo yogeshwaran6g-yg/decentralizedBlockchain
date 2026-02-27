@@ -14,25 +14,6 @@ const http = axios.create({
 });
 
 
-http.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem("authToken");
-
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-
-        // Handle FormData and standard objects
-        if (config.data instanceof FormData) {
-            delete config.headers["Content-Type"];
-        } else if (config.data && typeof config.data === "object") {
-            config.headers["Content-Type"] = "application/json";
-        }
-
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
 
 
 http.interceptors.response.use(
