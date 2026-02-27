@@ -1,7 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Header = ({ onMenuClick }) => {
-    const [connected, setConnected] = useState(false);
+    const [address, setAddress] = useState('');
+
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            setAddress(user.wallet_address);
+        }
+    }, []);
+
+    const formatAddress = (addr) => {
+        if (!addr) return '';
+        return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+    };
 
     return (
         <header className="h-16 glass-panel border-b border-white/5 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-40">
@@ -16,7 +28,7 @@ const Header = ({ onMenuClick }) => {
                     <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tight">Status</span>
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-mono text-accent-gold-light bg-accent-gold/10 px-2 py-0.5 rounded border border-accent-gold/20">
-                            {connected ? '0x71C...4e2' : 'Disconnected'}
+                            {address ? formatAddress(address) : 'Disconnected'}
                         </span>
                     </div>
                 </div>
@@ -37,12 +49,6 @@ const Header = ({ onMenuClick }) => {
                 <button className="flex items-center justify-center p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all relative">
                     <span className="material-symbols-outlined">notifications</span>
                     <span className="absolute top-2 right-2 w-2 h-2 bg-accent-gold rounded-full"></span>
-                </button>
-                <button
-                    onClick={() => setConnected(!connected)}
-                    className="h-10 px-3 sm:px-6 rounded-lg action-gradient-gold text-primary font-bold text-xs sm:text-sm tracking-wide shadow-[0_4px_15px_rgba(212,175,55,0.3)] hover:scale-[1.02] transition-transform"
-                >
-                    {connected ? 'Disconnect' : 'Connect'}
                 </button>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 border border-white/10 overflow-hidden">
                     <img
