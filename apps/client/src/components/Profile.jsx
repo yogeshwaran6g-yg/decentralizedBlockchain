@@ -4,7 +4,7 @@ import { useGetProfile, useUpdateProfile } from '../hooks/useProfile';
 const Profile = () => {
     const userId = JSON.parse(localStorage.getItem('user'))?.id;
 
-    const { data: queryData, isLoading } = useGetProfile(userId);
+    const { data: queryData, isLoading, isError, error } = useGetProfile(userId);
     const { mutate: saveProfile, isPending: isSaving } = useUpdateProfile(userId);
 
     const [profile, setProfile] = useState({
@@ -51,6 +51,36 @@ const Profile = () => {
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-10 h-10 border-2 border-accent-gold/10 border-b-accent-gold rounded-full animate-spin-reverse"></div>
                     </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (isError || !userId) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-primary text-white p-4">
+                <div className="glass-panel p-8 rounded-3xl border border-red-500/30 text-center max-w-md">
+                    <span className="material-symbols-outlined text-6xl text-red-500 mb-4">error</span>
+                    <h2 className="text-2xl font-bold mb-2">Profile Error</h2>
+                    <p className="text-gray-400 mb-6">{!userId ? 'Please login to view your profile' : (error?.message || 'Failed to load profile data')}</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="px-6 py-2 rounded-xl bg-accent-gold text-primary font-bold"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!queryData?.data && !isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-primary text-white">
+                <div className="text-center">
+                    <span className="material-symbols-outlined text-6xl text-accent-gold/40 mb-4">person_off</span>
+                    <h2 className="text-2xl font-bold">Profile Not Found</h2>
+                    <p className="text-gray-400 mt-2">We couldn't find your profile details.</p>
                 </div>
             </div>
         );

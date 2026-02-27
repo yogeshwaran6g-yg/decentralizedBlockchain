@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useGetSlotActivation, useUpdateSlotActivation } from '../hooks/useSlotActivation';
 
 const SlotActivation = () => {
-    const { data: slotActivation, isLoading, error } = useGetSlotActivation();
-    const { mutate: updateSlotActivation } = useUpdateSlotActivation();
+    const userId = JSON.parse(localStorage.getItem('user'))?.id;
+    const { data: slotActivation, isLoading, error } = useGetSlotActivation(userId);
+    const { mutate: updateSlotActivation } = useUpdateSlotActivation(userId);
     
     return (
         <div className="flex-1 -m-4 sm:-m-8 flex flex-col overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-background-dark to-background-dark">

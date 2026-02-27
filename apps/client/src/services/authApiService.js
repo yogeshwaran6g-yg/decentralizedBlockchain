@@ -1,0 +1,24 @@
+import { api, handleServiceError } from './axios';
+import { API_ENDPOINTS } from '../utils/endpoints';
+
+export const authApiService = {
+  
+    async getNonce(address) {
+        try {
+            const response = await api.get(API_ENDPOINTS.AUTH.NONCE, { address });
+            return response.data?.nonce || response.nonce;
+        } catch (error) {
+            return handleServiceError(error, 'AuthApiService.getNonce');
+        }
+    },
+
+  
+    async verifySignature(address, signature) {
+        try {
+            const data = await api.post(API_ENDPOINTS.AUTH.VERIFY, { address, signature });
+            return data;
+        } catch (error) {
+            return handleServiceError(error, 'AuthApiService.verifySignature');
+        }
+    }
+};

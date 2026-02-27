@@ -1,39 +1,33 @@
 import * as authService from '../services/authService.js';
+import { rtnRes } from '../utils/helper.js';
 
 export const getNonce = async (req, res) => {
-    try {
+    try{
         const { address } = req.query;
-        if (!address) {
-            return res.status(400).json({ message: 'Wallet address is required' });
+        if(!address){
+            return rtnRes(res, 400,"wallet address is required, must connect the wallet");
         }
-
-        const nonce = await authService.generateNonce(address);
-        res.json({ nonce });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        const result = await authService.generateNonce(address);
+        return rtnRes(res, result.status, result.message, result.data);
+    }catch(err){
+        console.log("error from the get nonce",err);
+        return rtnRes(res,500 ,"Internal Error");
     }
 };
 
 export const verify = async (req, res) => {
-    try {
+    try{
+
         const { address, signature } = req.body;
-        if (!address || !signature) {
-            return res.status(400).json({ message: 'Address and signature are required' });
+        if(!address, !signature){
+            return rtnRes(res, 404, "address and signature are required");
         }
-
         const origin = req.get('origin') || 'http://localhost:5173';
+        
         const result = await authService.verifySignature(address, signature, origin);
-
-        res.json(result);
-    } catch (err) {
-        if (err.message === 'User not found') {
-            return res.status(404).json({ message: err.message });
-        }
-        if (err.message === 'Invalid signature') {
-            return res.status(401).json({ message: err.message });
-        }
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        return rtnRes(res, result.status, result.message, result.data);
+    }catch(err){
+        console.log("error from the verify nonce",err);
+        return rtnRes(res,500 ,"Internal Error");
     }
 };

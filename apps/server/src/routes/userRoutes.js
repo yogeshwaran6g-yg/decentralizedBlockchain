@@ -1,20 +1,11 @@
 import express from 'express';
-import { queryRunner } from '../config/db.js';
-import authMiddleware from '../middleware/authMiddleware.js';
 import * as authController from '../controllers/authController.js';
+import { getNonceValidator, verifyValidator } from '../middleware/validators/authValidator.js';
+import { validate } from '../middleware/validatorMiddleware.js';
 
 const router = express.Router();
 
-// --- Authentication Routes ---
-
-// 1. Request Nonce
-router.get('/auth/nonce', authController.getNonce);
-
-// 2. Verify Signature & Issue JWT
-router.post('/auth/verify', authController.verify);
-
-// --- Protected Routes ---
-// Add other protected routes here if any
-
+router.get('/auth/nonce', getNonceValidator, validate, authController.getNonce);
+router.post('/auth/verify', verifyValidator, validate, authController.verify);
 
 export default router;

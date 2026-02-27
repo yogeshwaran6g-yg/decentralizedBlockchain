@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchSlotActivation, updateSlotActivation } from '../utils/api';
+import { slotApiService } from '../services/slotApiService';
 
 /**
  * Fetch a user's slot activation by their user_id.
@@ -8,7 +8,7 @@ import { fetchSlotActivation, updateSlotActivation } from '../utils/api';
 export const useGetSlotActivation = (userId) => {
     return useQuery({
         queryKey: ['slotActivation', userId],
-        queryFn: () => fetchSlotActivation(userId),
+        queryFn: () => slotApiService.fetchSlotActivation(userId),
         enabled: !!userId,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
@@ -23,7 +23,7 @@ export const useUpdateSlotActivation = (userId) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (slotActivationData) => updateSlotActivation(slotActivationData),
+        mutationFn: (slotActivationData) => slotApiService.updateSlotActivation(slotActivationData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['slotActivation', userId] });
         },

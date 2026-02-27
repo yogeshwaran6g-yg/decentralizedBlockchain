@@ -19,4 +19,8 @@ const DB_CONFIG = {
     : 20,
 };
 
-export { DB_CONFIG };
+const JWT_CONFIG = {
+  JWT_SECRET:process.env.JWT_SECRET
+}
+
+export { DB_CONFIG ,JWT_CONFIG};

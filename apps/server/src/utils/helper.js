@@ -30,3 +30,8 @@ export const rtnRes = (res, code, msg = null, data = null) => {
         });
     }
 };
+
+
+export const serviceResponse = (success, status, message, data = null, error = null) => {
+    return { success, status, message, data, error };
+};
