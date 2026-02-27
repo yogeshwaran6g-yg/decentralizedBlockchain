@@ -1,14 +1,14 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import Navbar from './components/Navbar'
-import Hero from './components/Hero'
-import Ecosystem from './components/Ecosystem'
-import Footer from './components/Footer'
-import Roadmap from './components/Roadmap'
-import { WalletAuthListener } from './components/WalletAuthListener'
+import Navbar from './Navbar'
+import Hero from './Hero'
+import Ecosystem from './Ecosystem'
+import Footer from './Footer'
+import Roadmap from './Roadmap'
+import { WalletAuthListener } from '../WalletAuthListener'
 
-function App() {
+function LandingPage() {
   return (
     <div className="bg-black-pure min-h-screen selection:bg-gold/30 selection:text-gold-light font-sans">
       <WalletAuthListener />
@@ -52,4 +52,4 @@ function App() {
   )
 }
 
-export default App
+export default LandingPage

@@ -14,6 +14,8 @@ import SlotActivation from './components/SlotActivation';
 import Profile from './components/Profile';
 import WithdrawPortal from './components/WithdrawPortal';
 
+import LandingPage from './components/landing/LandingPage';
+
 const Dashboard = () => (
     <>
         <QuickActions />
@@ -26,7 +28,8 @@ const Dashboard = () => (
 function App() {
     return (
         <Routes>
-            <Route element={<Layout />}>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/dashboard" element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="referral" element={<ReferralDashboard />} />
                 <Route path="slot-activation" element={<SlotActivation />} />
@@ -36,8 +39,8 @@ function App() {
                 <Route path="staking" element={<StakingDashboard />} />
                 <Route path="withdraw" element={<WithdrawPortal />} />
                 <Route path="profile" element={<Profile />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
 }
