@@ -9,20 +9,31 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
         try {
             const stored = localStorage.getItem('user');
-            if (stored && stored !== 'undefined') {
+            if (stored && stored !== 'undefined' && stored !== 'null') {
                 return JSON.parse(stored);
             }
         } catch (e) {
-            console.error('Initial parse error for user', e);
+            console.error('Failed to parse initial user from localStorage', e);
         }
         return null;
     });
 
-    const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('authToken'));
+    const [isAuthenticated, setIsAuthenticated] = useState(() => 
+        !!localStorage.getItem('authToken')
+    );
 
-    // Sync state when wallet disconnects or address changes
     useEffect(() => {
+        const token = localStorage.getItem('authToken');
+        const storedUserJSON = localStorage.getItem('user');
+
+        // Case 1: Wallet disconnected or no address
         if (!isConnected || !address) {
+            // If we have a token + user → probably dev login → keep it
+            if (token && storedUserJSON && storedUserJSON !== 'undefined' && storedUserJSON !== 'null') {
+                return; // preserve dev session across refreshes
+            }
+
+            // Otherwise → real wallet disconnect → clear everything
             setIsAuthenticated(false);
             setUser(null);
             localStorage.removeItem('authToken');
@@ -30,31 +41,37 @@ export const AuthProvider = ({ children }) => {
             return;
         }
 
-        const token = localStorage.getItem('authToken');
-        const storedUserJSON = localStorage.getItem('user');
+        // Case 2: We have an active wallet connection
+        if (!token || !storedUserJSON || storedUserJSON === 'undefined' || storedUserJSON === 'null') {
+            // No session → probably needs to sign in
+            setIsAuthenticated(false);
+            setUser(null);
+            return;
+        }
 
-        if (token && storedUserJSON && storedUserJSON !== 'undefined') {
-            try {
-                const storedUser = JSON.parse(storedUserJSON);
-                if (storedUser && storedUser.wallet_address?.toLowerCase() === address.toLowerCase()) {
-                    setIsAuthenticated(true);
-                    setUser(prev => prev?.id === storedUser.id ? prev : storedUser);
-                } else {
-                    // Different address or invalid user object — clear stale session
-                    setIsAuthenticated(false);
-                    setUser(null);
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('user');
-                }
-            } catch (e) {
-                console.error('Effect parse error for user', e);
+        try {
+            const storedUser = JSON.parse(storedUserJSON);
+
+            if (storedUser?.wallet_address?.toLowerCase() === address.toLowerCase()) {
+                // Session matches current wallet → good to go
+                setIsAuthenticated(true);
+                setUser(prev => (prev?.id === storedUser.id ? prev : storedUser));
+            } else {
+                // Wallet changed → clear old / stale session
+                console.warn('Wallet address mismatch — clearing stale session');
                 setIsAuthenticated(false);
                 setUser(null);
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('user');
             }
+        } catch (e) {
+            console.error('Failed to parse user during wallet sync', e);
+            setIsAuthenticated(false);
+            setUser(null);
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
         }
-    }, [address, isConnected]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [address, isConnected]);
 
     return (
         <AuthContext.Provider value={{ user, isAuthenticated, setUser, setIsAuthenticated }}>

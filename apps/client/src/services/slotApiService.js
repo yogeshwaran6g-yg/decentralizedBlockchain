@@ -9,8 +9,7 @@ export const slotApiService = {
      */
     async fetchSlotActivation(userId) {
         try {
-            // Assuming the endpoint exists or will be added
-            const data = await api.get(`${API_ENDPOINTS.PROFILE.GET_BY_USER(userId)}/levels`);
+            const data = await api.get(API_ENDPOINTS.SLOT_ACTIVATION.GET_BY_USER(userId));
             return data;
         } catch (error) {
             return handleServiceError(error, 'SlotApiService.fetchSlotActivation');
@@ -24,7 +23,7 @@ export const slotApiService = {
      */
     async updateSlotActivation(data) {
         try {
-            const response = await api.put(`${API_ENDPOINTS.PROFILE.UPDATE}/levels`, data, {
+            const response = await api.put(API_ENDPOINTS.SLOT_ACTIVATION.UPDATE, data, {
                 showSuccessToast: true
             });
             return response;
