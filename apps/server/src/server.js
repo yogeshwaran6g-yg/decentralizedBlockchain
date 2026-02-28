@@ -7,10 +7,10 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 
-import pool from "./src/config/db.js";
-import userRoutes from "./src/routes/userRoutes.js";
-import profileRoutes from "./src/routes/profileRoutes.js";
-import errorHandler from "./src/middleware/errorMiddleware.js";
+import pool from "./config/db.js";
+import userRoutes from "./routes/userRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
+import errorHandler from "./middleware/errorMiddleware.js";
 
 dotenv.config();
 
@@ -49,7 +49,10 @@ if (!isProduction) {
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
+    // origin:  "http://localhost:3000",
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
+    optionsSuccessStatus: 200,
   })
 );
 
@@ -74,11 +77,12 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-app.use("/api/users", userRoutes);
+app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/profile", profileRoutes);
 
 app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📡 CORS Origin allowed: ${process.env.CLIENT_URL || "http://localhost:5173"}`);
 });

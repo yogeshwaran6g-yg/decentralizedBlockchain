@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchProfile, updateProfile } from '../utils/api';
+import { profileApiService } from '../services/profileApiService';
 
 /**
  * Fetch a user's profile by their user_id.
@@ -8,7 +8,7 @@ import { fetchProfile, updateProfile } from '../utils/api';
 export const useGetProfile = (userId) => {
     return useQuery({
         queryKey: ['profile', userId],
-        queryFn: () => fetchProfile(userId),
+        queryFn: () => profileApiService.fetchProfile(userId),
         enabled: !!userId,
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
@@ -23,7 +23,7 @@ export const useUpdateProfile = (userId) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (profileData) => updateProfile(profileData),
+        mutationFn: (profileData) => profileApiService.updateProfile(profileData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['profile', userId] });
         },

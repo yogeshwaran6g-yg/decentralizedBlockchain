@@ -3,13 +3,13 @@
  * All server endpoints are defined here. Import from this file instead of hardcoding URLs.
  */
 
-const V1 = '/v1';
+const V1 = '/api/v1';
 
 export const API_ENDPOINTS = {
     // ── Auth ─────────────────────────────────────────────
     AUTH: {
-        NONCE: '/users/auth/nonce',   // POST  — request a sign nonce
-        VERIFY: '/users/auth/verify',  // POST  — verify wallet signature & get JWT
+        NONCE: `${V1}/users/auth/nonce`,   // GET  — request a sign nonce
+        VERIFY: `${V1}/users/auth/verify`,  // POST  — verify wallet signature & get JWT
     },
 
     // ── Profile ───────────────────────────────────────────

@@ -1,48 +1,69 @@
 import pool from './src/config/db.js';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const setupDatabase = async () => {
     try {
         console.log('--- Database Setup Started ---');
 
-        // Create table
-        console.log('Step 1: Creating "profile" table...');
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS profile (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(100),
-                email VARCHAR(255) UNIQUE,
-                phone_number VARCHAR(20),
-                dob DATE,
-                city VARCHAR(100),
-                country VARCHAR(100),
-                wallet_address VARCHAR(255),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
-        console.log('✓ Table "profile" ready.');
+        // Step 1: Create tables from db.sql
+        console.log('Step 1: Creating/Updating tables from db.sql...');
+        const sqlPath = path.join(__dirname, 'db.sql');
+        const schemaSql = await fs.readFile(sqlPath, 'utf8');
+        await pool.query(schemaSql);
+        console.log('✓ Schema applied successfully.');
 
-        // Seed initial data
-        console.log('Step 2: Checking for initial data...');
-        const res = await pool.query('SELECT COUNT(*) FROM profile');
-        if (parseInt(res.rows[0].count) === 0) {
-            console.log('Seeding initial profile data...');
+        // Step 2: Seed initial users
+        console.log('Step 2: Seeding initial users...');
+        const userCount = await pool.query('SELECT COUNT(*) FROM users');
+        if (parseInt(userCount.rows[0].count) === 0) {
+            const adminWallet = '0xf39Fd6e51aad88F6F4ce6aB8827219c761116117'; // Sample Hardhat address
+            const referralCode = 'REF-ADMIN-01';
+            
+            const result = await pool.query(`
+                INSERT INTO users (wallet_address, nonce, referral_code, role)
+                VALUES ($1, $2, $3, $4)
+                RETURNING id
+            `, [adminWallet.toLowerCase(), '123456', referralCode, 'ADMIN']);
+            
+            const adminId = result.rows[0].id;
+            console.log(`✓ Admin user created with ID: ${adminId}`);
+
+            // Step 3: Seed Profile for the admin
+            console.log('Step 3: Seeding profile...');
             await pool.query(`
-                INSERT INTO profile (username, email, phone_number, dob, city, country, wallet_address)
+                INSERT INTO profile (user_id, username, email, phone_number, dob, city, country)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
-            `, ['Alex Rivera', 'alex@luxe.io', '+123456789', '1992-05-15', 'New York', 'USA', '0x71C...4e2']);
-            console.log('✓ Initial profile seeded.');
+            `, [adminId, 'Super Admin', 'admin@dapp.io', '+100000000', '1990-01-01', 'Web3 City', 'Digital Realm']);
+            console.log('✓ Admin profile seeded.');
         } else {
-            console.log('✓ Data already exists, skipping seed.');
+            console.log('✓ Users already exist, skipping user/profile seed.');
+        }
+
+        // Step 4: Seed initial levels
+        console.log('Step 4: Seeding levels...');
+        const levelCount = await pool.query('SELECT COUNT(*) FROM levels');
+        if (parseInt(levelCount.rows[0].count) === 0) {
+            await pool.query(`
+                INSERT INTO levels (id, current_level_id, total_xp)
+                VALUES ($1, $2, $3)
+            `, [1, 1, 0]);
+            console.log('✓ Initial level seeded.');
+        } else {
+            console.log('✓ Levels already exist, skipping level seed.');
         }
 
         console.log('--- Database Setup Successful ---');
         process.exit(0);
     } catch (err) {
-        console.error('ERROR during setup:', err.message);
+        console.error('❌ ERROR during setup:', err.message);
         console.error('\nTips:');
         console.error('1. Ensure PostgreSQL is running.');
         console.error('2. Check DB_PASSWORD and other credentials in .env');
-        console.error('3. Ensure the database "luxe_blockchain" exists.');
         process.exit(1);
     }
 };
