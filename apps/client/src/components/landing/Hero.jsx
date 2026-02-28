@@ -1,22 +1,53 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles, Wallet } from 'lucide-react'
+import { ArrowRight, Wallet, Loader2, PenLine } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { useAppKit } from '@reown/appkit/react'
 import ConstellationBackground from './ConstellationBackground'
 import SignupView from './SignupView'
+import { useAuthContext } from '../../context/AuthContext'
+import { useNonce, useLogin } from '../../hooks/useAuth'
 
 export default function Hero() {
     const { open } = useAppKit()
     const { address, isConnected } = useAccount()
+    const { isAuthenticated } = useAuthContext()
+    const { login, isLoggingIn } = useLogin()
+    const { data: nonce, refetch: fetchNonce, isFetching: isFetchingNonce } = useNonce(
+        isConnected && !isAuthenticated ? address : null
+    )
     const [isSignupViewOpen, setIsSignupViewOpen] = useState(false)
 
-    const handleConnectClick = () => {
-        if (isConnected) {
-            open()
-        } else {
+    const handleConnectClick = async () => {
+        if (!isConnected) {
             setIsSignupViewOpen(true)
+        } else if (!isAuthenticated) {
+            // Ensure we have a fresh nonce before signing
+            let resolvedNonce = nonce
+            if (!resolvedNonce) {
+                const result = await fetchNonce()
+                resolvedNonce = result.data
+            }
+            login(resolvedNonce).catch(() => {})
+        } else {
+            open()
         }
+    }
+
+    const isWorking = isLoggingIn || isFetchingNonce
+
+    const getButtonLabel = () => {
+        if (!isConnected) return 'Connect Wallet'
+        if (isFetchingNonce) return 'Preparing...'
+        if (isLoggingIn) return 'Signing...'
+        if (!isAuthenticated) return `Sign to Login (${address?.slice(0, 6)}...${address?.slice(-4)})`
+        return `${address?.slice(0, 6)}...${address?.slice(-4)}`
+    }
+
+    const getButtonIcon = () => {
+        if (isWorking) return <Loader2 size={22} className="animate-spin" />
+        if (isConnected && !isAuthenticated) return <PenLine size={22} />
+        return <Wallet size={24} />
     }
     return (
         <section id="home" className="relative min-h-screen flex items-center justify-center pt-32 sm:pt-40 overflow-hidden bg-black-pure">
@@ -148,11 +179,12 @@ export default function Hero() {
                 >
                     <button
                         onClick={handleConnectClick}
-                        className="group w-full sm:w-auto bg-gold hover:bg-gold-light text-black px-12 py-4 md:py-5 rounded-full font-bold text-lg md:text-xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_40px_rgba(198,163,79,0.3)] flex items-center justify-center gap-3"
+                        disabled={isWorking}
+                        className="group w-full sm:w-auto bg-gold hover:bg-gold-light text-black px-12 py-4 md:py-5 rounded-full font-bold text-lg md:text-xl transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_40px_rgba(198,163,79,0.3)] flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed disabled:scale-100"
                     >
-                        <Wallet size={24} />
-                        {isConnected ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connect Wallet'}
-                        <ArrowRight size={22} className="transition-transform group-hover:translate-x-1" />
+                        {getButtonIcon()}
+                        {getButtonLabel()}
+                        {!isWorking && <ArrowRight size={22} className="transition-transform group-hover:translate-x-1" />}
                     </button>
                 </motion.div>
 

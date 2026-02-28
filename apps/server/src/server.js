@@ -49,6 +49,7 @@ if (!isProduction) {
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:5173",
+    // origin:  "http://localhost:3000",
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
     optionsSuccessStatus: 200,

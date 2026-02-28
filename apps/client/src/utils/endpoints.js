@@ -3,7 +3,7 @@
  * All server endpoints are defined here. Import from this file instead of hardcoding URLs.
  */
 
-const V1 = '/v1';
+const V1 = '/api/v1';
 
 export const API_ENDPOINTS = {
     // ── Auth ─────────────────────────────────────────────
