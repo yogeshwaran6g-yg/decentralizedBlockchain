@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Bell, ChevronDown, Menu } from 'lucide-react';
 
 const Header = ({ onMenuClick }) => {
     const [address, setAddress] = useState('');
@@ -21,46 +22,59 @@ const Header = ({ onMenuClick }) => {
     };
 
     return (
-        <header className="h-16 glass-panel border-b border-white/5 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-40">
-            <div className="flex items-center gap-3 sm:gap-6">
+        <header className="h-20 bg-[#0b0b0f]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 sm:px-10 sticky top-0 z-40 transition-all duration-300">
+            <div className="flex items-center gap-6 sm:gap-12">
                 <button
                     onClick={onMenuClick}
                     className="lg:hidden p-2 rounded-lg bg-white/5 text-white hover:bg-white/10 transition-colors"
                 >
-                    <span className="material-symbols-outlined">menu</span>
+                    <Menu size={20} />
                 </button>
-                <div className="flex flex-col hidden sm:flex">
-                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tight">Status</span>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-accent-gold-light bg-accent-gold/10 px-2 py-0.5 rounded border border-accent-gold/20">
-                            {address ? formatAddress(address) : 'Disconnected'}
-                        </span>
-                    </div>
-                </div>
-                <div className="h-8 w-px bg-white/10 hidden sm:block"></div>
-                <div className="flex gap-3 sm:gap-4">
+
+                {/* Left Stats Section */}
+                <div className="flex gap-8 sm:gap-12">
                     <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tight hidden xs:block">Energy</span>
-                        <span className="text-xs sm:text-sm font-bold text-white">450.00 <span className="xs:hidden text-[8px] text-gray-500">NRJ</span></span>
+                        <span className="text-[10px] text-gray-500 uppercase font-black tracking-[0.15em] mb-1">Energy</span>
+                        <div className="flex items-baseline gap-1.5">
+                            <span className="text-base sm:text-lg font-black text-white leading-none">450.00</span>
+                            <span className="text-[9px] font-bold text-accent-gold uppercase tracking-wider">NRJ</span>
+                        </div>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tight hidden xs:block">LUXE Token</span>
-                        <span className="text-xs sm:text-sm font-bold text-white">1,250.00 <span className="xs:hidden text-[8px] text-gray-500">LX</span></span>
+                        <span className="text-[10px] text-gray-500 uppercase font-black tracking-[0.15em] mb-1">Luxe Balance</span>
+                        <div className="flex items-baseline gap-1.5">
+                            <span className="text-base sm:text-lg font-black text-white leading-none">1,250.00</span>
+                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">LX</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4">
-                <button className="flex items-center justify-center p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all relative">
-                    <span className="material-symbols-outlined">notifications</span>
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-accent-gold rounded-full"></span>
+            <div className="flex items-center gap-4 sm:gap-6">
+                {/* Status Pill */}
+                <div className="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:border-accent-gold/30 cursor-pointer transition-all duration-300 group shadow-lg">
+                    <span className={`w-2 h-2 rounded-full transition-shadow duration-300 ${address ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-accent-gold shadow-[0_0_10px_#D4AF37]'}`}></span>
+                    <span className="text-[10px] font-black text-accent-gold uppercase tracking-[0.15em]">
+                        {address ? formatAddress(address) : 'Disconnected'}
+                    </span>
+                </div>
+
+                {/* Notifications */}
+                <button className="flex items-center justify-center p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all relative">
+                    <Bell size={18} />
+                    <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-accent-gold rounded-full border border-[#0b0b0f]"></span>
                 </button>
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/10 border border-white/10 overflow-hidden">
-                    <img
-                        className="w-full h-full object-cover"
-                        alt="User profile"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFKaOGEqx67axoW6iLXhSdvdyvxDb170U5VryWHnElt8B3QKCoot9mI3RUcatVZuM5rltR8cmExLDnrl_qsNwJBKSWJ6IESqKE7jtV5trks0gBD0ikRyggNLDZju4NL_dHT_qL4IKZl2YkK5nhwjM81QMVMHF5cs_4VGOBa2KfROplMXKA7hoh0uPc5xu1YaEdSa9r7MrlepExGa4G1dGmzZ3j6X_251LoiCgf46PRS98ilHdr2GxmH1QaHqcYhB-sHIbLdRdoAjrj"
-                    />
+
+                {/* Profile */}
+                <div className="flex items-center gap-3 pl-3 sm:pl-4 border-l border-white/10 cursor-pointer hover:opacity-80 transition-opacity">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden border border-white/10 bg-white/5 p-1 shadow-inner">
+                        <img
+                            className="w-full h-full object-cover rounded-lg"
+                            alt="User profile"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFKaOGEqx67axoW6iLXhSdvdyvxDb170U5VryWHnElt8B3QKCoot9mI3RUcatVZuM5rltR8cmExLDnrl_qsNwJBKSWJ6IESqKE7jtV5trks0gBD0ikRyggNLDZju4NL_dHT_qL4IKZl2YkK5nhwjM81QMVMHF5cs_4VGOBa2KfROplMXKA7hoh0uPc5xu1YaEdSa9r7MrlepExGa4G1dGmzZ3j6X_251LoiCgf46PRS98ilHdr2GxmH1QaHqcYhB-sHIbLdRdoAjrj"
+                        />
+                    </div>
+                    <ChevronDown size={14} className="text-gray-500 hidden sm:block" />
                 </div>
             </div>
         </header>
