@@ -12,6 +12,12 @@ export default defineConfig({
     server: {
         port: 3000,
         host: true,
-        hmr:true
+        hmr: true
+    },
+    resolve: {
+        alias: {
+            react: 'react',
+            'react-dom': 'react-dom'
+        }
     }
 })

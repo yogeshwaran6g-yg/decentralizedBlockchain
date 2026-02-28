@@ -4,9 +4,14 @@ const Header = ({ onMenuClick }) => {
     const [address, setAddress] = useState('');
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user) {
-            setAddress(user.wallet_address);
+        try {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser && storedUser !== 'undefined') {
+                const user = JSON.parse(storedUser);
+                if (user) setAddress(user.wallet_address);
+            }
+        } catch (e) {
+            console.error('Error parsing user from localStorage', e);
         }
     }, []);
 
