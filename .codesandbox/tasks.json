@@ -1,0 +1,28 @@
+{
+    "setupTasks": [
+        {
+            "name": "Install dependencies",
+            "command": "npm install"
+        },
+        {
+            "name": "Start PostgreSQL",
+            "command": "sudo service postgresql start"
+        },
+        {
+            "name": "Setup Database Schema",
+            "command": "npm run seed"
+        }
+    ],
+    "tasks": {
+        "server": {
+            "name": "Run Server",
+            "command": "npm run server",
+            "runAtStart": true
+        },
+        "client": {
+            "name": "Run Client",
+            "command": "npm run client",
+            "runAtStart": true
+        }
+    }
+}

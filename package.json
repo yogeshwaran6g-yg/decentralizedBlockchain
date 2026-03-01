@@ -13,7 +13,9 @@
     "server": "pnpm --filter server dev",
     "build:client": "pnpm --filter client build",
     "build:admin": "pnpm --filter admin build",
-    "seed": "pnpm --filter server seed"
+    "seed": "pnpm --filter server seed",
+    "db:start": "sudo service postgresql start",
+    "db:setup": "npm run db:start && npm run seed"
   },
   "dependencies": {
     "@reown/appkit": "^1.8.18",
