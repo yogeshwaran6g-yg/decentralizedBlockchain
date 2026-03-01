@@ -14,8 +14,8 @@
     "build:client": "pnpm --filter client build",
     "build:admin": "pnpm --filter admin build",
     "seed": "pnpm --filter server seed",
-    "db:start": "sudo service postgresql start || sudo /etc/init.d/postgresql start || pg_ctl start || echo 'PostgreSQL startup failed. Please check if it is installed.'",
-    "db:setup": "npm run db:start && npm run seed"
+    "db:start": "bash ./apps/server/src/utils/setup-db.sh",
+    "db:setup": "npm run db:start"
   },
   "dependencies": {
     "@reown/appkit": "^1.8.18",
