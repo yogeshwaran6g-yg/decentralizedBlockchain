@@ -1,6 +1,33 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 const UserManagement = () => {
+    const { data: usersData, isLoading, error } = useQuery({
+        queryKey: ['adminUsers'],
+        queryFn: async () => {
+            const response = await fetch('/api/v1/admin/users');
+            if (!response.ok) throw new Error('Failed to fetch users');
+            const data = await response.json();
+            return data.data;
+        }
+    });
+
+    const [activeReferrer, setActiveReferrer] = useState(null);
+    const popoverRef = useRef(null);
+
+    const users = usersData || [];
+
+    // Close popover when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+                setActiveReferrer(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     return (
         <div className="flex-1 overflow-y-auto bg-background-dark">
             {/* Header Section */}
@@ -27,8 +54,8 @@ const UserManagement = () => {
                     <div className="glass-card p-4 lg:p-6 rounded-xl flex items-center justify-between">
                         <div>
                             <p className="text-[9px] lg:text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5 lg:mb-1">Total Users</p>
-                            <h3 className="text-lg lg:text-2xl font-bold">12,842</h3>
-                            <p className="text-[9px] lg:text-[10px] text-green-400 font-semibold mt-0.5 lg:mt-1">+12%</p>
+                            <h3 className="text-lg lg:text-2xl font-bold">{users.length.toLocaleString()}</h3>
+                            <p className="text-[9px] lg:text-[10px] text-green-400 font-semibold mt-0.5 lg:mt-1">+100% (New System)</p>
                         </div>
                         <div className="size-10 lg:size-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
                             <span className="material-symbols-outlined text-2xl lg:text-3xl">groups</span>
@@ -36,9 +63,9 @@ const UserManagement = () => {
                     </div>
                     <div className="glass-card p-4 lg:p-6 rounded-xl flex items-center justify-between">
                         <div>
-                            <p className="text-[9px] lg:text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5 lg:mb-1">Active NFTs</p>
-                            <h3 className="text-lg lg:text-2xl font-bold">8,420</h3>
-                            <p className="text-[9px] lg:text-[10px] text-indigo-400 font-semibold mt-0.5 lg:mt-1">65% Activation Rate</p>
+                            <p className="text-[9px] lg:text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5 lg:mb-1">Active Users</p>
+                            <h3 className="text-lg lg:text-2xl font-bold">{users.filter(u => u.is_active).length.toLocaleString()}</h3>
+                            <p className="text-[9px] lg:text-[10px] text-indigo-400 font-semibold mt-0.5 lg:mt-1">{(users.length > 0 ? (users.filter(u => u.is_active).length / users.length * 100).toFixed(1) : 0)}% Activation Rate</p>
                         </div>
                         <div className="size-10 lg:size-12 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
                             <span className="material-symbols-outlined text-2xl lg:text-3xl">token</span>
@@ -46,12 +73,12 @@ const UserManagement = () => {
                     </div>
                     <div className="glass-card p-4 lg:p-6 rounded-xl flex items-center justify-between">
                         <div>
-                            <p className="text-[9px] lg:text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5 lg:mb-1">Protocol Earnings</p>
-                            <h3 className="text-lg lg:text-2xl font-bold">$1.2M</h3>
-                            <p className="text-[9px] lg:text-[10px] text-green-400 font-semibold mt-0.5 lg:mt-1">+18.5% ATH</p>
+                            <p className="text-[9px] lg:text-xs text-gray-500 font-bold uppercase tracking-wider mb-0.5 lg:mb-1">Blocked Users</p>
+                            <h3 className="text-lg lg:text-2xl font-bold">{users.filter(u => u.is_blocked).length.toLocaleString()}</h3>
+                            <p className="text-[9px] lg:text-[10px] text-red-400 font-semibold mt-0.5 lg:mt-1">Safety First</p>
                         </div>
-                        <div className="size-10 lg:size-12 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400">
-                            <span className="material-symbols-outlined text-2xl lg:text-3xl">payments</span>
+                        <div className="size-10 lg:size-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400">
+                            <span className="material-symbols-outlined text-2xl lg:text-3xl">block</span>
                         </div>
                     </div>
                 </div>
@@ -88,52 +115,101 @@ const UserManagement = () => {
                 </div>
 
                 {/* Table Section */}
-                <div className="mt-6 glass-card rounded-xl overflow-hidden">
+                <div className="mt-6 glass-card rounded-xl overflow-hidden min-h-[400px]">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse min-w-[800px]">
                             <thead className="bg-white/[0.02] border-b border-white/5">
                                 <tr>
                                     <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">Address</th>
+                                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">Username</th>
                                     <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">Slot</th>
-                                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">NFT</th>
-                                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">Earnings</th>
+                                    <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">XP</th>
                                     <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">Reg Date</th>
                                     <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
                                     <th className="px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {[
-                                    { wallet: '0x71C...7401', level: 'Level 5', nft: 'Active', earnings: '$12,450.00', date: 'Oct 24, 2023', status: 'Active', color: 'green' },
-                                    { wallet: '0x03A...11F2', level: 'Level 12', nft: 'Active', earnings: '$48,210.50', date: 'Nov 12, 2023', status: 'Active', color: 'green' },
-                                    { wallet: '0xE82...98AA', level: 'Level 2', nft: 'None', earnings: '$120.00', date: 'Jan 05, 2024', status: 'Suspended', color: 'red' },
-                                    { wallet: '0x4F1...22C0', level: 'Level 8', nft: 'Active', earnings: '$3,150.00', date: 'Jan 18, 2024', status: 'Active', color: 'green' },
-                                    { wallet: '0xBC8...6331', level: 'Level 1', nft: 'None', earnings: '$0.00', date: 'Feb 02, 2024', status: 'Active', color: 'green' },
-                                ].map((row, i) => (
-                                    <tr key={i} className="table-row-hover transition-colors">
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan="7" className="px-6 py-20 text-center">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="size-8 rounded-full border-2 border-yellow-400 border-t-transparent animate-spin"></div>
+                                                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Loading Users...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : users.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="7" className="px-6 py-20 text-center">
+                                            <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">No Users Found</p>
+                                        </td>
+                                    </tr>
+                                ) : users.map((user) => (
+                                    <tr key={user.id} className="table-row-hover transition-colors">
                                         <td className="px-4 lg:px-6 py-3 lg:py-4">
                                             <div className="flex items-center gap-2 group">
-                                                <span className={`font-mono text-xs lg:text-sm ${row.color === 'red' ? 'text-gray-500' : 'text-gray-300'}`}>{row.wallet}</span>
+                                                <span className={`font-mono text-xs lg:text-sm ${user.is_blocked ? 'text-gray-500' : 'text-gray-300'}`}>
+                                                    {user.wallet_address.slice(0, 6)}...{user.wallet_address.slice(-4)}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="px-4 lg:px-6 py-3 lg:py-4">
-                                            <span className={`text-xs lg:text-sm font-semibold ${row.color === 'red' ? 'text-gray-500' : 'text-yellow-400'}`}>{row.level}</span>
+                                            <span className="text-xs lg:text-sm text-gray-400">{user.username || 'Anon User'}</span>
                                         </td>
                                         <td className="px-4 lg:px-6 py-3 lg:py-4">
-                                            <div className={`flex items-center gap-1.5 ${row.nft === 'None' ? 'text-gray-600' : ''}`}>
-                                                <div className={`size-1.5 lg:size-2 rounded-full ${row.nft === 'None' ? 'bg-gray-600' : 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]'}`}></div>
-                                                <span className="text-[10px] lg:text-xs font-medium">{row.nft}</span>
-                                            </div>
+                                            <span className={`text-xs lg:text-sm font-semibold ${user.is_blocked ? 'text-gray-500' : 'text-yellow-400'}`}>Level {user.level || 1}</span>
                                         </td>
                                         <td className="px-4 lg:px-6 py-3 lg:py-4">
-                                            <span className={`text-xs lg:text-sm font-bold ${row.color === 'red' ? 'text-gray-500' : ''}`}>{row.earnings}</span>
+                                            <span className={`text-xs lg:text-sm font-bold ${user.is_blocked ? 'text-gray-500' : 'text-gray-300'}`}>{(user.total_xp || 0).toLocaleString()} XP</span>
                                         </td>
-                                        <td className={`px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-sm ${row.color === 'red' ? 'text-gray-500' : 'text-gray-400'}`}>{row.date}</td>
+                                        <td className={`px-4 lg:px-6 py-3 lg:py-4 text-[10px] lg:text-sm ${user.is_blocked ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
+                                        </td>
                                         <td className="px-4 lg:px-6 py-3 lg:py-4">
-                                            <span className={`px-2 py-0.5 lg:px-2.5 lg:py-1 rounded border border-${row.color}-500/20 bg-${row.color}-500/10 text-${row.color}-400 text-[8px] lg:text-[10px] font-bold uppercase`}>{row.status}</span>
+                                            {user.is_blocked ? (
+                                                <span className="px-2 py-0.5 lg:px-2.5 lg:py-1 rounded border border-red-500/20 bg-red-500/10 text-red-400 text-[8px] lg:text-[10px] font-bold uppercase">Blocked</span>
+                                            ) : (
+                                                <span className="px-2 py-0.5 lg:px-2.5 lg:py-1 rounded border border-green-500/20 bg-green-500/10 text-green-400 text-[8px] lg:text-[10px] font-bold uppercase">Active</span>
+                                            )}
                                         </td>
-                                        <td className="px-4 lg:px-6 py-3 lg:py-4 text-right">
-                                            <button className="material-symbols-outlined text-gray-500 hover:text-white transition-colors text-lg lg:text-2xl">more_vert</button>
+                                        <td className="px-4 lg:px-6 py-3 lg:py-4 text-right relative">
+                                            <button
+                                                onClick={() => setActiveReferrer(activeReferrer === user.id ? null : user.id)}
+                                                className="material-symbols-outlined text-gray-500 hover:text-white transition-colors text-lg lg:text-2xl"
+                                            >
+                                                more_vert
+                                            </button>
+
+                                            {activeReferrer === user.id && (
+                                                <div
+                                                    ref={popoverRef}
+                                                    className="absolute right-0 mt-2 w-64 glass-card bg-background-dark/95 backdrop-blur-xl border border-white/10 rounded-xl p-4 shadow-2xl z-50 text-left animate-in fade-in zoom-in duration-200"
+                                                >
+                                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2">Referral Information</p>
+                                                    <div className="space-y-3">
+                                                        <div>
+                                                            <p className="text-[10px] text-gray-400 mb-1 font-medium">Referred By</p>
+                                                            {user.referred_by_address ? (
+                                                                <div className="flex items-center gap-2 bg-white/5 p-2 rounded-lg border border-white/5">
+                                                                    <span className="material-symbols-outlined text-yellow-400 text-sm">link</span>
+                                                                    <span className="font-mono text-xs text-gray-200">
+                                                                        {user.referred_by_address.slice(0, 10)}...{user.referred_by_address.slice(-8)}
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-xs text-gray-500 italic px-2">No referrer (Organic)</p>
+                                                            )}
+                                                        </div>
+                                                        <div className="pt-2 border-t border-white/5">
+                                                            <button className="w-full py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-colors flex items-center justify-center gap-2">
+                                                                <span className="material-symbols-outlined text-sm">visibility</span>
+                                                                View Details
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -143,19 +219,15 @@ const UserManagement = () => {
 
                     {/* Pagination */}
                     <div className="px-4 lg:px-6 py-3 lg:py-4 flex flex-col sm:flex-row items-center justify-between gap-2 bg-white/[0.01] border-t border-white/5">
-                        <p className="text-[10px] lg:text-xs text-gray-500 font-medium">Showing 1 to 5 of 12,842 users</p>
+                        <p className="text-[10px] lg:text-xs text-gray-500 font-medium">Showing {users.length} of {users.length} users</p>
                         <div className="flex gap-1 lg:gap-2">
                             <button className="size-7 lg:size-8 flex items-center justify-center rounded border border-white/5 bg-white/5 text-gray-500 hover:text-white transition-colors disabled:opacity-30" disabled>
                                 <span className="material-symbols-outlined text-base lg:text-lg">chevron_left</span>
                             </button>
                             <div className="flex items-center gap-0.5 lg:gap-1">
                                 <button className="size-7 lg:size-8 rounded bg-yellow-400 text-[10px] lg:text-xs font-bold text-black">1</button>
-                                <button className="size-7 lg:size-8 rounded hover:bg-white/5 text-[10px] lg:text-xs font-bold text-gray-400 hover:text-white transition-all">2</button>
-                                <button className="size-7 lg:size-8 rounded hover:bg-white/5 text-[10px] lg:text-xs font-bold text-gray-400 hover:text-white transition-all">3</button>
-                                <span className="text-gray-600 px-0.5 lg:px-1 text-[10px] lg:text-xs">...</span>
-                                <button className="size-7 lg:size-8 rounded hover:bg-white/5 text-[10px] lg:text-xs font-bold text-gray-400 hover:text-white transition-all">2568</button>
                             </div>
-                            <button className="size-7 lg:size-8 flex items-center justify-center rounded border border-white/5 bg-white/5 text-gray-400 hover:text-white transition-colors">
+                            <button className="size-7 lg:size-8 flex items-center justify-center rounded border border-white/5 bg-white/5 text-gray-400 hover:text-white transition-colors disabled:opacity-30" disabled>
                                 <span className="material-symbols-outlined text-base lg:text-lg">chevron_right</span>
                             </button>
                         </div>
