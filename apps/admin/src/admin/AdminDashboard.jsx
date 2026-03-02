@@ -1,37 +1,59 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import AdminLayout from './components/AdminLayout';
 import UserManagement from './components/UserManagement';
 import Treasury from './components/Treasury';
 
 const DashboardHome = () => {
+    const { data: dashboardData, isLoading } = useQuery({
+        queryKey: ['adminStats'],
+        queryFn: async () => {
+            const response = await fetch('/api/v1/admin/stats');
+            if (!response.ok) throw new Error('Failed to fetch stats');
+            const data = await response.json();
+            return data.data;
+        }
+    });
+
+    const stats = dashboardData?.stats || {};
+    const recentActivities = dashboardData?.recentActivities || [];
+
+    const statCards = [
+        { label: 'Total Users', value: stats.total_users?.toLocaleString() || '0', trend: `+${stats.users_24h || 0} last 24h`, icon: 'group' },
+        { label: 'Active Users', value: stats.active_users?.toLocaleString() || '0', trend: `${(stats.total_users > 0 ? (stats.active_users / stats.total_users * 100).toFixed(1) : 0)}% rate`, icon: 'token' },
+        { label: 'Total XP', value: stats.total_xp?.toLocaleString() || '0', trend: 'Global Progress', icon: 'workspace_premium' },
+        { label: 'Blocked Users', value: stats.blocked_users?.toLocaleString() || '0', trend: 'Safety Monitoring', icon: 'block', down: true },
+        { label: 'Growth rate', value: stats.users_24h?.toLocaleString() || '0', trend: 'New Registrations', icon: 'trending_up' },
+    ].slice(0, 5); // Matching the grid layout
+
     return (
         <div className="flex-1 overflow-y-auto p-3 lg:p-6 space-y-4 lg:space-y-6">
             {/* Row 1: Global Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
-                {[
-                    { label: 'Total Users', value: '1.28M', trend: '+12.4%', icon: 'group' },
-                    { label: 'Total TVL', value: '$4.82B', trend: '+5.4%', icon: 'lock_open' },
-                    { label: '24h Volume', value: '$124.5M', trend: '+22.1%', icon: 'swap_horiz' },
-                    { label: 'Slot Revenue', value: '$890K', trend: '-2.1%', icon: 'database', down: true },
-                    { label: 'NFT Royalties', value: '$2.15M', trend: '+8.5%', icon: 'workspace_premium' },
-                ].map((stat, i) => (
-                    <div key={i} className="bg-card-dark rounded-2xl lg:rounded-3xl p-4 lg:p-7 flex flex-col gap-3 lg:gap-6 border border-white/5 relative overflow-hidden group hover:border-yellow-400/20 transition-all">
-                        <div className="flex justify-between items-start">
-                            <span className="text-[9px] lg:text-[11px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</span>
-                            <span className="material-symbols-outlined text-yellow-400 text-xl lg:text-2xl">{stat.icon}</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <h3 className="text-xl lg:text-3xl font-black text-white tracking-tight">{stat.value}</h3>
-                            <div className="flex items-center gap-1.5 mt-0.5 lg:mt-1">
-                                <span className={`material-symbols-outlined text-[10px] lg:text-sm ${stat.down ? 'text-red-500' : 'text-green-500'}`}>
-                                    {stat.down ? 'trending_down' : 'trending_up'}
-                                </span>
-                                <span className={`text-[10px] lg:text-[12px] font-bold ${stat.down ? 'text-red-500' : 'text-green-500'}`}>{stat.trend}</span>
+                {isLoading ? (
+                    <div className="col-span-full h-32 flex items-center justify-center glass-card rounded-2xl border border-white/5">
+                        <div className="size-6 rounded-full border-2 border-yellow-400 border-t-transparent animate-spin"></div>
+                    </div>
+                ) : (
+                    statCards.map((stat, i) => (
+                        <div key={i} className="bg-card-dark rounded-2xl lg:rounded-3xl p-4 lg:p-7 flex flex-col gap-3 lg:gap-6 border border-white/5 relative overflow-hidden group hover:border-yellow-400/20 transition-all">
+                            <div className="flex justify-between items-start">
+                                <span className="text-[9px] lg:text-[11px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</span>
+                                <span className="material-symbols-outlined text-yellow-400 text-xl lg:text-2xl">{stat.icon}</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <h3 className="text-xl lg:text-3xl font-black text-white tracking-tight">{stat.value}</h3>
+                                <div className="flex items-center gap-1.5 mt-0.5 lg:mt-1">
+                                    <span className={`material-symbols-outlined text-[10px] lg:text-sm ${stat.down ? 'text-red-500' : 'text-green-500'}`}>
+                                        {stat.down ? 'trending_down' : 'trending_up'}
+                                    </span>
+                                    <span className={`text-[10px] lg:text-[12px] font-bold ${stat.down ? 'text-red-500' : 'text-green-500'}`}>{stat.trend}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {/* Row 2: Analytics */}
@@ -108,21 +130,28 @@ const DashboardHome = () => {
                                 </tr>
                             </thead>
                             <tbody className="text-sm border-t border-white/5">
-                                {[
-                                    { wallet: '0x3A2...F91d', action: 'Staked 1,200 ECO', time: '2 mins ago', status: 'CONFIRMED', statusColor: 'green' },
-                                    { wallet: '0x1B8...42Cc', action: 'NFT Minted #8292', time: '12 mins ago', status: 'CONFIRMED', statusColor: 'green' },
-                                    { wallet: '0x9E1...82A1', action: 'LP Withdrawal', time: '45 mins ago', status: 'PENDING', statusColor: 'yellow' },
-                                    { wallet: '0x77D...33Be', action: 'Swap ETH to ECO', time: '1 hour ago', status: 'CONFIRMED', statusColor: 'green' },
-                                ].map((row, i) => (
-                                    <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
-                                        <td className="px-10 py-6 font-mono text-yellow-400 font-black tracking-widest">{row.wallet}</td>
-                                        <td className="px-10 py-6 text-slate-200 font-bold tracking-wide">{row.action}</td>
-                                        <td className="px-10 py-6 text-slate-500 text-[12px] font-black tracking-tight">{row.time}</td>
-                                        <td className="px-10 py-6 text-right">
-                                            <span className={`px-4 py-2 rounded-lg bg-${row.statusColor}-500/10 text-${row.statusColor}-500 text-[10px] font-black uppercase tracking-[0.1em] border border-${row.statusColor}-500/20`}>{row.status}</span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {isLoading ? (
+                                    <tr><td colSpan="4" className="py-20 text-center text-slate-500 font-black uppercase tracking-widest">Loading...</td></tr>
+                                ) : recentActivities.length === 0 ? (
+                                    <tr><td colSpan="4" className="py-20 text-center text-slate-500 font-black uppercase tracking-widest">No activities recorded</td></tr>
+                                ) : (
+                                    recentActivities.map((row, i) => (
+                                        <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
+                                            <td className="px-10 py-6 font-mono text-yellow-400 font-black tracking-widest">
+                                                {row.wallet_address.slice(0, 7)}...{row.wallet_address.slice(-6)}
+                                            </td>
+                                            <td className="px-10 py-6 text-slate-200 font-bold tracking-wide">{row.action}</td>
+                                            <td className="px-10 py-6 text-slate-500 text-[12px] font-black tracking-tight">
+                                                {new Date(row.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            </td>
+                                            <td className="px-10 py-6 text-right">
+                                                <span className={`px-4 py-2 rounded-lg bg-green-500/10 text-green-500 text-[10px] font-black uppercase tracking-[0.1em] border border-green-500/20`}>
+                                                    {row.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

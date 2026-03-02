@@ -23,13 +23,13 @@ const setupDatabase = async () => {
         if (parseInt(userCount.rows[0].count) === 0) {
             const adminWallet = '0xf39Fd6e51aad88F6F4ce6aB8827219c761116117'; // Sample Hardhat address
             const referralCode = 'REF-ADMIN-01';
-            
+
             const result = await pool.query(`
                 INSERT INTO users (wallet_address, nonce, referral_code, role)
                 VALUES ($1, $2, $3, $4)
                 RETURNING id
             `, [adminWallet.toLowerCase(), '123456', referralCode, 'ADMIN']);
-            
+
             const adminId = result.rows[0].id;
             console.log(`✓ Admin user created with ID: ${adminId}`);
 
@@ -55,6 +55,28 @@ const setupDatabase = async () => {
             console.log('✓ Initial level seeded.');
         } else {
             console.log('✓ Levels already exist, skipping level seed.');
+        }
+
+        // Step 5: Seed Treasury Logs
+        console.log('Step 5: Seeding treasury logs...');
+        const treasuryCount = await pool.query('SELECT COUNT(*) FROM treasury_logs');
+        if (parseInt(treasuryCount.rows[0].count) === 0) {
+            const logs = [
+                ['INFLOW', 'ETH', 12.50, 33450.00, '0x8a9c...3fc', 'CONFIRMED'],
+                ['PAYOUT', 'USDC', 5000.00, 5000.00, '0x14b9...f822', 'CONFIRMED'],
+                ['INFLOW', 'USDT', 2500.00, 2500.00, '0x77d2...e1a2', 'CONFIRMED'],
+                ['TRANSFER', 'ETH', 1.20, 3200.00, '0x33b1...a91d', 'CONFIRMED']
+            ];
+
+            for (const log of logs) {
+                await pool.query(`
+                    INSERT INTO treasury_logs (type, asset, amount, usd_value, tx_hash, status)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                `, log);
+            }
+            console.log('✓ Treasury logs seeded.');
+        } else {
+            console.log('✓ Treasury logs already exist, skipping seed.');
         }
 
         console.log('--- Database Setup Successful ---');
