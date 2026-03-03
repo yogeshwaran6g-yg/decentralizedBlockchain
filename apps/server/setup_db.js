@@ -48,13 +48,52 @@ const setupDatabase = async () => {
         console.log('Step 4: Seeding levels...');
         const levelCount = await pool.query('SELECT COUNT(*) FROM levels');
         if (parseInt(levelCount.rows[0].count) === 0) {
-            await pool.query(`
-                INSERT INTO levels (id, current_level_id, total_xp)
-                VALUES ($1, $2, $3)
-            `, [1, 1, 0]);
-            console.log('✓ Initial level seeded.');
+            // Seed levels for existing users
+            const users = await pool.query('SELECT id FROM users');
+            for (const user of users.rows) {
+                await pool.query(`
+                    INSERT INTO levels (id, current_level_id, total_xp)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (id) DO NOTHING
+                `, [user.id, 1, 0]);
+            }
+            console.log('✓ Levels seeded.');
         } else {
-            console.log('✓ Levels already exist, skipping level seed.');
+            console.log('✓ Levels already exist.');
+        }
+
+        // Step 5: Seed initial wallets
+        console.log('Step 5: Seeding wallets...');
+        const walletCount = await pool.query('SELECT COUNT(*) FROM user_wallets');
+        if (parseInt(walletCount.rows[0].count) === 0) {
+            const users = await pool.query('SELECT id FROM users');
+            for (const user of users.rows) {
+                await pool.query(`
+                    INSERT INTO user_wallets (user_id, energy_balance, reward_token_balance, locked_balance)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (user_id) DO NOTHING
+                `, [user.id, 1000.50, 500.25, 100.00]);
+            }
+            console.log('✓ Wallets seeded.');
+        } else {
+            console.log('✓ Wallets already exist.');
+        }
+
+        // Step 6: Seed initial NFTs
+        console.log('Step 6: Seeding NFTs...');
+        const nftCount = await pool.query('SELECT COUNT(*) FROM user_nfts');
+        if (parseInt(nftCount.rows[0].count) === 0) {
+            const users = await pool.query('SELECT id FROM users');
+            for (const user of users.rows) {
+                await pool.query(`
+                    INSERT INTO user_nfts (user_id, contract_address, token_id, metadata_uri, is_staked)
+                    VALUES ($1, $2, $3, $4, $5)
+                    ON CONFLICT DO NOTHING
+                `, [user.id, '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d', '1', 'https://metadata.example/1', false]);
+            }
+            console.log('✓ NFTs seeded.');
+        } else {
+            console.log('✓ NFTs already exist.');
         }
 
         // Step 5: Seed Treasury Logs
