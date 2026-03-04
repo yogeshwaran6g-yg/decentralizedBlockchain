@@ -31,4 +31,6 @@ const JWT_CONFIG = {
   }
 };
 
-export { DB_CONFIG, JWT_CONFIG };
+const NETWORK_TYPE = process.env.NETWORK_TYPE || "testnet";
+
+export { DB_CONFIG, JWT_CONFIG, NETWORK_TYPE };

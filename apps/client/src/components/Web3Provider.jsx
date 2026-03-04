@@ -1,6 +1,6 @@
 import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { mainnet, polygon, arbitrum } from "wagmi/chains";
+import { mainnet, polygon, arbitrum, polygonAmoy } from "wagmi/chains";
 import { useAccount, WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
@@ -9,7 +9,10 @@ import React from 'react'
 const projectId = import.meta.env.VITE_PROJECT_ID;
 
 // 2. Create Wagmi Adapter
-const networks = [mainnet, polygon, arbitrum]
+const isTestnet = import.meta.env.VITE_NETWORK === 'testnet';
+const activePolygon = isTestnet ? polygonAmoy : polygon;
+
+const networks = [activePolygon, mainnet, arbitrum]
 
 const wagmiAdapter = new WagmiAdapter({
     projectId,
