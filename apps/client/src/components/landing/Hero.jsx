@@ -1,57 +1,35 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Wallet, Loader2, PenLine } from 'lucide-react'
+import { ArrowRight, Wallet } from 'lucide-react'
 import { useAccount } from 'wagmi'
 import { useAppKit } from '@reown/appkit/react'
 import ConstellationBackground from './ConstellationBackground'
-import SignupView from './SignupView'
 import { useAuthContext } from '../../context/AuthContext'
-import { useNonce, useLogin } from '../../hooks/useAuth'
+import { useNavigate } from 'react-router-dom'
 
 export default function Hero() {
     const { open } = useAppKit()
     const navigate = useNavigate()
     const { address, isConnected } = useAccount()
     const { isAuthenticated } = useAuthContext()
-    const { login, isLoggingIn } = useLogin()
-    const { data: nonce, refetch: fetchNonce, isFetching: isFetchingNonce } = useNonce(
-        isConnected && !isAuthenticated ? address : null
-    )
-    const [isSignupViewOpen, setIsSignupViewOpen] = useState(false)
 
-    const handleConnectClick = async () => {
-        if (!isConnected) {
-            setIsSignupViewOpen(true)
-        } else if (!isAuthenticated) {
-            // Ensure we have a fresh nonce before signing
-            let resolvedNonce = nonce
-            if (!resolvedNonce) {
-                const result = await fetchNonce()
-                resolvedNonce = result.data
-            }
-            const loginResult = await login(resolvedNonce)
-            if (loginResult) {
-                navigate('/slot-activation')
-            }
-        } else {
+    const handleConnectClick = () => {
+        if (!isAuthenticated) {
             open()
+        } else {
+            navigate('/slot-activation')
         }
     }
 
-    const isWorking = isLoggingIn || isFetchingNonce
+    const isWorking = false
 
     const getButtonLabel = () => {
         if (!isConnected) return 'Connect Wallet'
-        if (isFetchingNonce) return 'Preparing...'
-        if (isLoggingIn) return 'Signing...'
-        if (!isAuthenticated) return `Sign to Login (${address?.slice(0, 6)}...${address?.slice(-4)})`
-        return `${address?.slice(0, 6)}...${address?.slice(-4)}`
+        if (!isAuthenticated) return 'Sign to Login'
+        return 'Enter Dashboard'
     }
 
     const getButtonIcon = () => {
-        if (isWorking) return <Loader2 size={22} className="animate-spin" />
-        if (isConnected && !isAuthenticated) return <PenLine size={22} />
         return <Wallet size={24} />
     }
     return (
@@ -219,15 +197,6 @@ export default function Hero() {
                     ))}
                 </motion.div>
             </div>
-
-            <SignupView
-                isOpen={isSignupViewOpen}
-                onClose={() => setIsSignupViewOpen(false)}
-                onConnect={() => {
-                    setIsSignupViewOpen(false);
-                    open();
-                }}
-            />
         </section>
     )
 }

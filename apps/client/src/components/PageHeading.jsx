@@ -2,8 +2,8 @@ import React from 'react';
 
 const PageHeading = ({ title, highlight, badge, subtitle }) => {
     return (
-        <div className="mb-12 max-w-7xl">
-            <div className="space-y-4">
+        <div className="mb-6 max-w-7xl">
+            <div className="space-y-2">
                 {badge && (
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-[2px] bg-accent-gold shadow-[0_0_10px_rgba(212,175,55,0.4)]"></div>
@@ -19,7 +19,7 @@ const PageHeading = ({ title, highlight, badge, subtitle }) => {
                 </h1>
 
                 {subtitle && (
-                    <div className="border-l-2 border-accent-gold/20 pl-4 mt-6">
+                    <div className="border-l-2 border-accent-gold/20 pl-4 mt-3">
                         <p className="text-white/50 text-xs sm:text-base max-w-2xl leading-relaxed">
                             {subtitle}
                         </p>

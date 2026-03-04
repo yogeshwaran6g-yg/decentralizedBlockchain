@@ -1,32 +1,53 @@
 import { useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { useAuthContext } from '../context/AuthContext';
-import { useLogout } from '../hooks/useAuth';
+import { useNonce, useLogin } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * WalletAuthListener
- * Watches for wallet disconnects and address changes, then clears auth state.
+ * Automatically triggers the signature request immediately after connection
+ * if the user is not authenticated.
  */
 export function WalletAuthListener() {
-    const { isConnected, address } = useAccount();
+    const { address, isConnected } = useAccount();
     const { isAuthenticated } = useAuthContext();
-    const logout = useLogout();
-    const previousAddressRef = useRef(null);
+    const { login } = useLogin();
+    const { data: nonce, refetch: fetchNonce } = useNonce(
+        isConnected && !isAuthenticated ? address : null
+    );
+    const navigate = useNavigate();
+
+    // Use a ref to prevent multiple simultaneous signing requests
+    const isAuthenticating = useRef(false);
 
     useEffect(() => {
-        if (!isConnected) {
-            if (isAuthenticated) logout();
-            previousAddressRef.current = null;
-            return;
-        }
+        const handleAutoLogin = async () => {
+            if (isConnected && address && !isAuthenticated && !isAuthenticating.current) {
+                isAuthenticating.current = true;
 
-        if (address && previousAddressRef.current &&
-            previousAddressRef.current.toLowerCase() !== address.toLowerCase()) {
-            logout();
-        }
+                try {
+                    // 1. Get a fresh nonce
+                    const result = await fetchNonce();
+                    const currentNonce = result.data;
 
-        previousAddressRef.current = address;
-    }, [isConnected, address, isAuthenticated, logout]);
+                    if (currentNonce) {
+                        // 2. Trigger the login (signature prompt)
+                        const loginResult = await login(currentNonce);
+                        if (loginResult) {
+                            navigate('/dashboard');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Auto-login failed:', error);
+                } finally {
+                    isAuthenticating.current = false;
+                }
+            }
+        };
+
+        handleAutoLogin();
+    }, [isConnected, address, isAuthenticated, fetchNonce, login, navigate]);
 
     return null;
 }
