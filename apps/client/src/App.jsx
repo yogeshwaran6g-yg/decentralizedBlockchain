@@ -22,7 +22,7 @@ import { authApiService } from './services/authApiService';
 import { useAuthContext } from './context/AuthContext';
 
 const Dashboard = () => (
-    <div className="space-y-8">
+    <div className="space-y-6">
         <PageHeading
             highlight="SYSTEM"
             title="OVERVIEW"

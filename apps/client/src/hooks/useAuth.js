@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSignMessage, useAccount } from 'wagmi';
+import { useSignMessage, useAccount, useDisconnect } from 'wagmi';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { authApiService } from '../services/authApiService';
@@ -46,6 +46,7 @@ export const useLogin = () => {
     const { address } = useAccount();
     const { setUser, setIsAuthenticated } = useAuthContext();
     const { signMessageAsync, isPending: isSigning } = useSignMessage();
+    const { disconnect } = useDisconnect();
     const verifyMutation = useVerifySignature();
     const verifyMutationRef = useRef(verifyMutation);
     verifyMutationRef.current = verifyMutation;
@@ -73,12 +74,19 @@ export const useLogin = () => {
             toast.success('Successfully authenticated!');
             return response;
         } catch (error) {
-            if (error.code !== 4001 && !error.message?.includes('User rejected')) {
+            if (error.code === 4001 || error.message?.includes('User rejected')) {
+                // Logout/Disconnect if user cancels signature
+                try {
+                    disconnect();
+                } catch (discErr) {
+                    console.error('Error disconnecting after cancel:', discErr);
+                }
+            } else {
                 toast.error(error.message || 'Authentication failed');
             }
             throw error;
         }
-    }, [address, verifyMutationRef, setUser, setIsAuthenticated]);
+    }, [address, verifyMutationRef, setUser, setIsAuthenticated, disconnect]);
     return { login, isLoggingIn };
 };
 
@@ -87,6 +95,7 @@ export const useLogin = () => {
  */
 export const useLogout = () => {
     const { setUser, setIsAuthenticated } = useAuthContext();
+    const { disconnect } = useDisconnect();
     const navigate = useNavigate();
 
     return useCallback(() => {
@@ -94,7 +103,14 @@ export const useLogout = () => {
         localStorage.removeItem('user');
         setIsAuthenticated(false);
         setUser(null);
+
+        try {
+            disconnect();
+        } catch (error) {
+            console.error('Error disconnecting wallet:', error);
+        }
+
         toast.success('Logged out');
         navigate('/');
-    }, [setUser, setIsAuthenticated, navigate]);
+    }, [setUser, setIsAuthenticated, navigate, disconnect]);
 };

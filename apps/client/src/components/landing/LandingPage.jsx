@@ -8,37 +8,19 @@ import Footer from './Footer'
 import Roadmap from './Roadmap'
 import { useAppKit } from '@reown/appkit/react'
 import { useAccount } from 'wagmi'
-import { WalletAuthListener } from '../WalletAuthListener'
-import SignupView from './SignupView'
-import { useAuthContext } from '../../context/AuthContext'
-import { useLogin, useNonce } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
+import { useAuthContext } from '../../context/AuthContext'
+import { WalletAuthListener } from '../WalletAuthListener'
 
 function LandingPage() {
     const { open } = useAppKit()
     const navigate = useNavigate()
-    const { address, isConnected } = useAccount()
+    const { isConnected } = useAccount()
     const { isAuthenticated } = useAuthContext()
-    const { login } = useLogin()
-    const { data: nonce, refetch: fetchNonce } = useNonce(
-        isConnected && !isAuthenticated ? address : null
-    )
-    const [isSignupViewOpen, setIsSignupViewOpen] = React.useState(false)
 
-    const handleConnectClick = async () => {
-        if (!isConnected) {
-            setIsSignupViewOpen(true)
-        } else if (!isAuthenticated) {
-            // Ensure we have a fresh nonce before signing
-            let resolvedNonce = nonce
-            if (!resolvedNonce) {
-                const result = await fetchNonce()
-                resolvedNonce = result.data
-            }
-            const loginResult = await login(resolvedNonce)
-            if (loginResult) {
-                navigate('/dashboard')
-            }
+    const handleConnectClick = () => {
+        if (!isAuthenticated) {
+            open()
         } else {
             navigate('/dashboard')
         }
@@ -84,15 +66,6 @@ function LandingPage() {
                 </section>
             </main>
             <Footer />
-
-            <SignupView
-                isOpen={isSignupViewOpen}
-                onClose={() => setIsSignupViewOpen(false)}
-                onConnect={() => {
-                    setIsSignupViewOpen(false);
-                    open();
-                }}
-            />
         </div>
     )
 }

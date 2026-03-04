@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, ChevronDown, Menu, LogOut } from 'lucide-react';
 import { useLogout } from '../hooks/useAuth';
-import { useWalletBalance } from '../hooks/useWallet';
-import { API_ENDPOINTS } from '../utils/endpoints';
-import { useQueryClient } from '@tanstack/react-query';
 
 const Header = ({ onMenuClick }) => {
     const [address, setAddress] = useState('');
     const logout = useLogout();
-    const queryClient = useQueryClient();
-    const { data: walletData, isLoading: isBalanceLoading } = useWalletBalance();
-    const [faucetAmount, setFaucetAmount] = useState('10');
 
     useEffect(() => {
         try {
@@ -67,39 +61,6 @@ const Header = ({ onMenuClick }) => {
                             {address ? formatAddress(address) : 'Disconnected'}
                         </span>
                     </div>
-                    {address && (
-                        <div className="flex items-center gap-3 px-2">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Test Balance:</span>
-                                <span className="text-[10px] font-black text-white italic">
-                                    {isBalanceLoading ? '...' : `$${walletData?.ethBalance || '0.00'}`}
-                                </span>
-                            </div>
-                            <div className="flex items-center bg-white/5 border border-white/10 rounded-md overflow-hidden">
-                                <input
-                                    type="number"
-                                    value={faucetAmount}
-                                    onChange={(e) => setFaucetAmount(e.target.value)}
-                                    className="w-12 bg-transparent text-[9px] font-black text-white px-2 py-0.5 outline-none border-r border-white/10"
-                                    placeholder="Amount"
-                                />
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            const { default: axios } = await import('../services/axios');
-                                            await axios.post(API_ENDPOINTS.WALLET.FAUCET, { amount: parseFloat(faucetAmount) });
-                                            queryClient.invalidateQueries({ queryKey: ['walletBalance'] });
-                                        } catch (e) {
-                                            console.error('Faucet error', e);
-                                        }
-                                    }}
-                                    className="px-2 py-0.5 text-[8px] font-black text-accent-gold hover:bg-white/5 transition-all uppercase"
-                                >
-                                    Add
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Notifications */}
