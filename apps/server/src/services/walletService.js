@@ -71,12 +71,6 @@ export const recordStakingTransaction = async (userId, amount, txHash) => {
     }
 };
 
-/**
- * Stake internal tokens
- * @param {number} userId 
- * @param {number} amount 
- * @returns {Promise<Object>}
- */
 export const stakeInternalToken = async (userId, amount) => {
     try {
         return await transactionRunner(async (client) => {
@@ -135,7 +129,8 @@ export const getWalletInfo = async (userId) => {
         );
 
         const stakingRes = await queryRunner(
-            "SELECT COALESCE(SUM(amount), 0) as locked_balance FROM internal_stakes WHERE user_id = $1 AND status = 'ACTIVE'",
+            `SELECT COALESCE(SUM(amount), 0) 
+            as locked_balance FROM internal_stakes WHERE user_id = $1 AND status = 'ACTIVE'`,
             [userId]
         );
 

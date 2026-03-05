@@ -46,7 +46,6 @@ CREATE TABLE IF NOT EXISTS yeild (
     CONSTRAINT fk_staking_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
-
 CREATE TABLE IF NOT EXISTS user_wallets (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL UNIQUE,
@@ -58,6 +57,13 @@ CREATE TABLE IF NOT EXISTS user_wallets (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_wallet_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
+
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_wallets' AND column_name = 'reward_token_balance') THEN
+        ALTER TABLE user_wallets RENAME COLUMN reward_token_balance TO own_token_balance;
+    END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS user_nfts (
     id BIGSERIAL PRIMARY KEY,
@@ -81,7 +87,13 @@ CREATE TABLE IF NOT EXISTS system_funds (
 
 CREATE TABLE IF NOT EXISTS treasury_logs (
     id BIGSERIAL PRIMARY KEY,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('INFLOW', 'PAYOUT', 'TRANSFER')),
+    type VARCHAR(50) NOT NULL CHECK (
+        type IN (
+            'INFLOW',
+            'PAYOUT',
+            'TRANSFER'
+        )
+    ),
     asset VARCHAR(50) NOT NULL,
     amount DECIMAL(18, 6) NOT NULL,
     usd_value DECIMAL(18, 2) NOT NULL,
@@ -90,33 +102,54 @@ CREATE TABLE IF NOT EXISTS treasury_logs (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
 -- Initial seeding for system funds
-INSERT INTO system_funds (fund_name) VALUES 
-('ROYALTY'), ('PRODUCT'), ('DEVELOPERS'), ('EXPENSE'), ('DEVELOPMENT')
-ON CONFLICT (fund_name) DO NOTHING;
+INSERT INTO
+    system_funds (fund_name)
+VALUES ('ROYALTY'),
+    ('PRODUCT'),
+    ('DEVELOPERS'),
+    ('EXPENSE'),
+    ('DEVELOPMENT') ON CONFLICT (fund_name) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS stake_history (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     amount DECIMAL(18, 6) NOT NULL,
-    type VARCHAR(20) NOT NULL CHECK (type IN ('STAKE', 'REWARD_CLAIM')),
+    type VARCHAR(20) NOT NULL CHECK (
+        type IN ('STAKE', 'REWARD_CLAIM')
+    ),
     tx_hash VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_stake_history_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'stake_status') THEN
+        CREATE TYPE stake_status AS ENUM ('ACTIVE', 'UNSTAKED');
+    END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS internal_stakes (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     amount DECIMAL(18, 6) NOT NULL,
-    CREATE TYPE stake_status AS ENUM ('ACTIVE', 'UNSTAKED');
     admin_address VARCHAR(255) DEFAULT '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266',
     staked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status stake_status DEFAULT 'ACTIVE',
     CONSTRAINT fk_internal_stake_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
-
-
+-- Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_users_referred_by ON users(referred_by);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
+CREATE INDEX IF NOT EXISTS idx_profile_user_id ON profile(user_id);
+CREATE INDEX IF NOT EXISTS idx_profile_username_lower ON profile(LOWER(username));
+CREATE INDEX IF NOT EXISTS idx_user_wallets_user_id ON user_wallets(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_nfts_user_id ON user_nfts(user_id);
+CREATE INDEX IF NOT EXISTS idx_stake_history_user_id ON stake_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_stake_history_created_at ON stake_history(created_at);
+CREATE INDEX IF NOT EXISTS idx_internal_stakes_user_id ON internal_stakes(user_id);
+CREATE INDEX IF NOT EXISTS idx_internal_stakes_status ON internal_stakes(status);
+CREATE INDEX IF NOT EXISTS idx_yeild_user_id ON yeild(user_id);
+CREATE INDEX IF NOT EXISTS idx_treasury_logs_created_at ON treasury_logs(created_at);

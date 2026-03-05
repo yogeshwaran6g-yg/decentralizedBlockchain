@@ -99,7 +99,7 @@ const Header = ({ onMenuClick }) => {
                                                 </button>
                                             </div>
                                         </div>
-
+ 
                                         <div className="bg-white/5 rounded-xl p-4 border border-white/5 space-y-4">
                                             <div>
                                                 <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest block mb-2">Native Balance</span>

@@ -1,0 +1,103 @@
+# Codebase Overview: Client & Server
+
+This document provides a high-level overview of the modules, functions, and communication patterns in the DApp.
+
+## Server Side (Backend)
+
+The server is built with Node.js and Express, following a Route-Controller-Service architecture.
+
+### API Base URL: `/api/v1`
+
+| Module | Route Prefix | Main Controller | Purpose |
+| :--- | :--- | :--- | :--- |
+| **Users / Auth** | `/users` | `authController.js` | Web3 authentication, nonce generation, and verification. |
+| **Profile** | `/profile` | `profileController.js` | User profile management (GET, UPDATE). |
+| **Slot Activation** | `/slot-activation` | `slotActivationController.js`| Level/slot management and admin wallet config. |
+| **Admin** | `/admin` | `adminController.js` | Dashboard stats, user management, and treasury metrics. |
+| **Wallet** | `/wallet` | `walletController.js` | Balance fetching, staking records, and internal staking. |
+
+---
+
+### Module Details (Functions)
+
+#### 1. Auth & Users
+- **Controller (`authController.js`):**
+    - `getNonce`: Generates a random nonce for wallet signing.
+    - `verify`: Verifies the signature and issues a JWT.
+    - `devLogin`: Bypasses signature for development purposes.
+- **Service (`authService.js`):**
+    - `generateNonce`, `verifySignature`, `signToken`, `devLogin`.
+- **Service (`userService.js`):**
+    - `findUserById`, `findUserByAddress`, `getAllUsersForAdmin`, `getDashboardStats`, `blockUser`.
+
+#### 2. Wallet & Staking
+- **Controller (`walletController.js`):**
+    - `getWalletBalance`: Fetches on-chain ETH/USDT balance.
+    - `getWalletInfo`: Fetches internal energy/token balances.
+    - `recordStake`: Records an on-chain staking transaction.
+    - `stakeInternal`: Handles internal token staking.
+- **Service (`walletService.js`):**
+    - `recordStakingTransaction`: Verifies tx on-chain and updates DB.
+    - `stakeInternalToken`: Processes staking using internal balances.
+    - `getWalletInfo`: Aggregates internal wallet and staking data.
+- **Service (`blockchainService.js`):**
+    - `getWalletBalance`, `calculateEligibleLevel`.
+
+#### 3. Slot Activation & Profiles
+- **Controller (`slotActivationController.js`):**
+    - `getSlotActivation`, `updateSlotActivation`, `getAdminWallet`.
+- **Service (`slotActivationService.js`):**
+    - `getSlotActivation`, `updateSlotActivation`, `getAdminWallet`.
+- **Controller (`profileController.js`):**
+    - `getProfile`, `updateProfile`, `getAllProfiles`.
+- **Service (`profileService.js`):**
+    - `getProfileByUserId`, `updateProfile`, `getAllProfiles`.
+
+---
+
+## Client Side (Frontend)
+
+The client is a React application built with Vite, using Tailwind CSS and Framer Motion for UI.
+
+### Landing Page Modules (`/src/components/landing`)
+- **`Hero.jsx`**: Main introduction and CTA.
+- **`Ecosystem.jsx`**: Displays the platform's ecosystem/features.
+- **`Roadmap.jsx`**: Project timeline and future plans.
+- **`Navbar.jsx` / `Footer.jsx`**: Global navigation and footer.
+- **`LandingPage.jsx`**: Main layout container for the landing experience.
+
+### Main App Routes (`/src/App.jsx`)
+- `/dashboard`: Main analytics overview.
+- `/slot-activation`: Level management UI.
+- `/staking`: Staking interface (On-chain & Internal).
+- `/wallet`: Internal wallet and balances.
+- `/swap`: Token swap interface.
+- `/referral`: Referral system dashboard.
+- `/profile`: User settings and profile.
+
+### Hooks & Functions (`/src/hooks`)
+| Hook | Key Functions / Return Values | Purpose |
+| :--- | :--- | :--- |
+| `useAuth` | `login(nonce)`, `logout()`, `useNonce(address)` | Handles Web3 login flow and session. |
+| `useProfile` | `useGetProfile(userId)`, `useUpdateProfile(userId)` | Manages user profile state. |
+| `useSlotActivation`| `useGetSlotActivation(userId)`, `useUpdateSlotActivation()` | Manages level upgrades. |
+| `useWallet` | `useWalletBalance()` | Fetches on-chain balances with auto-refresh. |
+
+### API Services (`/src/services`)
+Centralized API handlers using a custom `axios` wrapper (`axios.js`).
+- `authApiService.js`: `getNonce`, `verifySignature`, `devLogin`.
+- `profileApiService.js`: `fetchProfile`, `updateProfile`, `getAllProfiles`.
+- `slotApiService.js`: `fetchSlotActivation`, `updateSlotActivation`, `fetchAdminWallet`.
+- `walletApiService.js`: `getBalance`, `requestFaucet`.
+
+---
+
+## Direct Fetch & Axios Usages
+*Note: Most API calls use the centralized services, but some components use direct fetch or axios.*
+
+1. **`WalletContext.jsx`**:
+    - Uses `fetch('/api/wallet/info', ...)` directly to sync internal state.
+    - Uses `fetch('/api/wallet/stake-internal', ...)` for internal staking actions.
+2. **`authApi.js`**:
+    - Uses a raw `axios` instance directly instead of the `services/axios.js` wrapper.
+    - Targeted at `${VITE_API_BASE_URL}/users/...` endpoints.

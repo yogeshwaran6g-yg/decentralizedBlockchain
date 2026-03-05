@@ -2,11 +2,7 @@ import * as blockchainService from '../services/blockchainService.js';
 import * as walletService from '../services/walletService.js';
 import { rtnRes } from '../utils/helper.js';
 
-/**
- * Get the real on-chain balance for the authenticated user
- * @param {Object} req 
- * @param {Object} res 
- */
+
 export const getWalletBalance = async (req, res) => {
     try {
         // req.user is populated by authMiddleware
@@ -29,11 +25,7 @@ export const getWalletBalance = async (req, res) => {
     }
 };
 
-/**
- * Add test ETH to the user's simulated account (Faucet)
- * @param {Object} req 
- * @param {Object} res 
- */
+
 export const getTestEth = async (req, res) => {
     try {
         // Faucet logic for fake balance removed per user request
@@ -44,11 +36,7 @@ export const getTestEth = async (req, res) => {
     }
 };
 
-/**
- * Record a successful on-chain staking transaction
- * @param {Object} req 
- * @param {Object} res 
- */
+
 export const recordStake = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -71,11 +59,6 @@ export const recordStake = async (req, res) => {
     }
 };
 
-/**
- * Stake internal tokens
- * @param {Object} req 
- * @param {Object} res 
- */
 export const stakeInternal = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -98,11 +81,6 @@ export const stakeInternal = async (req, res) => {
     }
 };
 
-/**
- * Get internal wallet balances (energy, rewards, staked)
- * @param {Object} req 
- * @param {Object} res 
- */
 export const getWalletInfo = async (req, res) => {
     try {
         const userId = req.user?.id;

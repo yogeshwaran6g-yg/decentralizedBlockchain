@@ -42,12 +42,7 @@ export const getSlotActivation = async (userId) => {
     }
 };
 
-/**
- * Update slot activation/level for a user
- * @param {string|number} userId 
- * @param {Object} activationData - { currentLevelId, txHash }
- * @returns {Promise<Object>}
- */
+
 export const updateSlotActivation = async (userId, { current_level_id: currentLevelId, tx_hash: txHash }) => {
     try {
         const price = SLOT_PRICES[currentLevelId];

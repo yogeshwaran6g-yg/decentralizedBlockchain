@@ -1,6 +1,21 @@
 import { queryRunner } from '../config/db.js';
 import { serviceResponse } from '../utils/helper.js';
 
+export const ensureUserProfile = async (userId, walletAddress) => {
+    try {
+        // Ensure profile exists - using ON CONFLICT to handle concurrent inserts
+        await queryRunner(
+            'INSERT INTO profile (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING',
+            [userId]
+        );
+
+        return serviceResponse(true, 200, 'Profile ensured successfully');
+    } catch (err) {
+        console.error(`[UserService] Error in ensureUserProfile: ${err.message}`);
+        return serviceResponse(false, 500, 'Error ensuring profile ', null, err.message);
+    }
+};
+
 export const findUserById = async (id) => {
     try {
         const result = await queryRunner('SELECT * FROM users WHERE id = $1', [id]);
