@@ -23,6 +23,7 @@ const DB_CONFIG = {
   MAX_POOL: process.env.DB_MAX_POOL
     ? Number(process.env.DB_MAX_POOL)
     : 20,
+  STATEMENT_TIMEOUT: 10000, // 10 seconds limit
 };
 
 const JWT_CONFIG = {

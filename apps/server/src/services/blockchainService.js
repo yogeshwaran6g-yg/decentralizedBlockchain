@@ -17,18 +17,31 @@ const MINIMAL_ERC20_ABI = [
 ];
 
 // Initialize provider using multiple RPCs for fallbacks
+let cachedProvider = null;
+let lastProviderCheck = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 const getBestProvider = async () => {
+    const now = Date.now();
+    if (cachedProvider && (now - lastProviderCheck < CACHE_DURATION)) {
+        return cachedProvider;
+    }
+
     const urls = RPC_URLS;
     for (const url of urls) {
         try {
             const p = new ethers.JsonRpcProvider(url, undefined, { staticNetwork: true });
             await p.getBlockNumber(); // Test connection
             console.log(`[BlockchainService] Using RPC: ${url}`);
+            cachedProvider = p;
+            lastProviderCheck = now;
             return p;
         } catch (e) {
             console.warn(`[BlockchainService] RPC failed: ${url}`);
         }
     }
+
+    if (cachedProvider) return cachedProvider; // Fallback to old if all new fail
     throw new Error("All RPC endpoints failed");
 };
 

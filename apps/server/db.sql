@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS profile (
     dob DATE,
     city VARCHAR(100),
     country VARCHAR(100),
+    avatar_url TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_profile_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
@@ -133,6 +134,18 @@ CREATE TABLE IF NOT EXISTS internal_stakes (
     CONSTRAINT fk_internal_stake_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS income_logs (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL, -- The referrer who received the commission
+    source_user_id BIGINT NOT NULL, -- The user who activated the slot
+    amount DECIMAL(18, 6) NOT NULL,
+    level INTEGER NOT NULL, -- 1, 2, 3, or 4
+    type VARCHAR(50) NOT NULL DEFAULT 'COMMISSION',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_income_logs_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_income_logs_source FOREIGN KEY (source_user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
 -- Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_users_referred_by ON users(referred_by);
 CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
@@ -146,3 +159,5 @@ CREATE INDEX IF NOT EXISTS idx_internal_stakes_user_id ON internal_stakes(user_i
 CREATE INDEX IF NOT EXISTS idx_internal_stakes_status ON internal_stakes(status);
 CREATE INDEX IF NOT EXISTS idx_yeild_user_id ON yeild(user_id);
 CREATE INDEX IF NOT EXISTS idx_treasury_logs_created_at ON treasury_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_income_logs_user_id ON income_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_income_logs_created_at ON income_logs(created_at);
