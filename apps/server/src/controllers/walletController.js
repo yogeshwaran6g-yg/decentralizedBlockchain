@@ -16,7 +16,7 @@ export const getWalletBalance = async (req, res) => {
 
         return rtnRes(res, 200, "Wallet balance fetched successfully", {
             address,
-            ethBalance: balances.ethBalance,
+            polBalance: balances.polBalance,
             usdtBalance: balances.usdtBalance
         });
     } catch (err) {
@@ -36,28 +36,6 @@ export const getTestEth = async (req, res) => {
     }
 };
 
-
-export const recordStake = async (req, res) => {
-    try {
-        const userId = req.user?.id;
-        const { amount, txHash } = req.body;
-
-        if (!userId) {
-            return rtnRes(res, 400, "User ID not found in session");
-        }
-
-        if (!amount || !txHash) {
-            return rtnRes(res, 400, "Amount and Transaction Hash are required");
-        }
-
-        const result = await walletService.recordStakingTransaction(userId, amount, txHash);
-
-        return rtnRes(res, result.status, result.message, result.data);
-    } catch (err) {
-        console.error("Error from recordStake controller:", err);
-        return rtnRes(res, 500, "Internal Error recording stake");
-    }
-};
 
 export const stakeInternal = async (req, res) => {
     try {
@@ -81,6 +59,27 @@ export const stakeInternal = async (req, res) => {
     }
 };
 
+export const claimRewards = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { amount } = req.body;
+
+        if (!userId) {
+            return rtnRes(res, 400, "User ID not found in session");
+        }
+
+        if (!amount || isNaN(parseFloat(amount))) {
+            return rtnRes(res, 400, "Valid reward amount is required");
+        }
+
+        const result = await walletService.claimRewards(userId, parseFloat(amount));
+        return rtnRes(res, result.status, result.message, result.data);
+    } catch (err) {
+        console.error("Error from claimRewards controller:", err);
+        return rtnRes(res, 500, "Internal Error claiming rewards");
+    }
+};
+
 export const getWalletInfo = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -93,5 +92,20 @@ export const getWalletInfo = async (req, res) => {
     } catch (err) {
         console.error("Error from getWalletInfo controller:", err);
         return rtnRes(res, 500, "Internal Error fetching wallet info");
+    }
+};
+
+export const getStakeHistory = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return rtnRes(res, 400, "User ID not found in session");
+        }
+
+        const result = await walletService.getStakeHistory(userId);
+        return rtnRes(res, result.status, result.message, result.data);
+    } catch (err) {
+        console.error("Error from getStakeHistory controller:", err);
+        return rtnRes(res, 500, "Internal Error fetching stake history");
     }
 };

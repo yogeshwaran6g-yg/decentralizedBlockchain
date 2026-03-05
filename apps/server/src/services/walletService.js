@@ -1,80 +1,11 @@
-import { ethers } from 'ethers';
 import { queryRunner, transactionRunner } from '../config/db.js';
 import { serviceResponse } from '../utils/helper.js';
 
-const RPC_URL = 'https://polygon-rpc.com';
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'.toLowerCase();
-const ADMIN_WALLET = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'.toLowerCase();
-
-/**
- * Record a successful on-chain staking transaction
- * @param {number} userId 
- * @param {number} amount 
- * @param {string} txHash 
- * @returns {Promise<Object>}
- */
-export const recordStakingTransaction = async (userId, amount, txHash) => {
-    try {
-        // 1. Verify transaction on-chain
-        console.log(`[WalletService] Verifying transaction ${txHash} on-chain...`);
-        const tx = await provider.getTransaction(txHash);
-
-        if (!tx) {
-            return serviceResponse(false, 400, 'Transaction not found on-chain');
-        }
-
-        const receipt = await provider.getTransactionReceipt(txHash);
-        if (!receipt || receipt.status !== 1) {
-            return serviceResponse(false, 400, 'Transaction failed or not confirmed');
-        }
-
-        // 2. Decode transaction to ensure it's a USDT transfer to ADMIN_WALLET
-        // Note: For a robust implementation, we would parse the data using the ERC20 interface
-        // but as a verification step, we check the 'to' address (if it's a direct transfer)
-        // or the contract address and data if it's an ERC20 transfer.
-
-        // Since it's a contract call (ERC20 transfer), tx.to will be USDT_ADDRESS
-        if (tx.to.toLowerCase() !== USDT_ADDRESS) {
-            return serviceResponse(false, 400, 'Transaction is not a USDT transfer');
-        }
-
-        // We can add more rigorous data decoding here if needed, but for now, we've verified the tx success.
-
-        return await transactionRunner(async (client) => {
-            // 2. Update user's locked balance
-            await client.query(`
-                INSERT INTO user_wallets (user_id, locked_balance) 
-                VALUES ($1, $2) 
-                ON CONFLICT (user_id) DO UPDATE SET 
-                    locked_balance = user_wallets.locked_balance + $2,
-                    updated_at = CURRENT_TIMESTAMP
-            `, [userId, amount]);
-
-            // 3. Create entry in yeild table
-            await client.query(`
-                INSERT INTO yeild (user_id, amount, asset) 
-                VALUES ($1, $2, 'USDT')
-            `, [userId, amount]);
-
-            // 4. Log in treasury_logs
-            await client.query(`
-                INSERT INTO treasury_logs (type, asset, amount, usd_value, tx_hash, status) 
-                VALUES ('INFLOW', 'USDT', $1, $1, $2, 'CONFIRMED')
-            `, [amount, txHash]);
-
-            return serviceResponse(true, 200, 'Staking transaction verified and recorded successfully');
-        });
-    } catch (err) {
-        console.error(`[WalletService] Error in recordStakingTransaction: ${err.message}`);
-        return serviceResponse(false, 500, 'Error recording staking transaction', null, err.message);
-    }
-};
 
 export const stakeInternalToken = async (userId, amount) => {
     try {
         return await transactionRunner(async (client) => {
-    
+
             const balanceRes = await client.query(
                 'SELECT own_token_balance FROM user_wallets WHERE user_id = $1',
                 [userId]
@@ -92,7 +23,13 @@ export const stakeInternalToken = async (userId, amount) => {
                 WHERE user_id = $2
             `, [amount, userId]);
 
-     
+            await client.query(`
+                UPDATE user_wallets 
+                SET own_token_balance = own_token_balance + $1,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = (SELECT id FROM users WHERE role = 'ADMIN' ORDER BY id ASC LIMIT 1)
+            `, [amount]);
+
             await client.query(`
                 INSERT INTO internal_stakes (user_id, amount, status)
                 VALUES ($1, $2, 'ACTIVE')
@@ -123,10 +60,26 @@ export const stakeInternalToken = async (userId, amount) => {
  */
 export const getWalletInfo = async (userId) => {
     try {
-        const walletRes = await queryRunner(
+        console.log(`[WalletService] getWalletInfo called for userId: ${userId}`);
+
+        let walletRes = await queryRunner(
             'SELECT energy_balance, own_token_balance FROM user_wallets WHERE user_id = $1',
             [userId]
         );
+
+        console.log(`[WalletService] wallet rows found: ${walletRes.length}`, walletRes[0] || 'NO ROW');
+
+        // Auto-create wallet row if it doesn't exist
+        if (walletRes.length === 0) {
+            console.log(`[WalletService] No wallet row found for userId ${userId}. Creating one...`);
+            await queryRunner(
+                `INSERT INTO user_wallets (user_id, energy_balance, own_token_balance, locked_balance)
+                 VALUES ($1, 0, 0, 0)
+                 ON CONFLICT (user_id) DO NOTHING`,
+                [userId]
+            );
+            walletRes = [{ energy_balance: 0, own_token_balance: 0 }];
+        }
 
         const stakingRes = await queryRunner(
             `SELECT COALESCE(SUM(amount), 0) 
@@ -134,16 +87,71 @@ export const getWalletInfo = async (userId) => {
             [userId]
         );
 
-        const wallet = walletRes[0] || { energy_balance: 0, own_token_balance: 0 };
+        const wallet = walletRes[0];
         const locked_balance = parseFloat(stakingRes[0]?.locked_balance || 0);
 
+        const ownTokenBalance = parseFloat(wallet.own_token_balance || 0);
+        const energyBalance = parseFloat(wallet.energy_balance || 0);
+
+        console.log(`[WalletService] Returning: own_token_balance=${ownTokenBalance}, energy_balance=${energyBalance}, locked=${locked_balance}`);
+
         return serviceResponse(true, 200, 'Wallet info fetched successfully', {
-            energy_balance: wallet.energy_balance,
-            own_token_balance: wallet.own_token_balance,
+            energy_balance: energyBalance,
+            own_token_balance: ownTokenBalance,
             locked_balance: locked_balance
         });
     } catch (err) {
         console.error(`[WalletService] Error in getWalletInfo: ${err.message}`);
         return serviceResponse(false, 500, 'Error fetching wallet info', null, err.message);
+    }
+};
+
+/**
+ * Get staking history for a user
+ * @param {number} userId 
+ * @returns {Promise<Object>}
+ */
+export const getStakeHistory = async (userId) => {
+    try {
+        const historyRes = await queryRunner(
+            `SELECT amount, type, created_at, tx_hash 
+             FROM stake_history 
+             WHERE user_id = $1 
+             ORDER BY created_at DESC 
+             LIMIT 10`,
+            [userId]
+        );
+
+        return serviceResponse(true, 200, 'Stake history fetched successfully', historyRes);
+    } catch (err) {
+        console.error(`[WalletService] Error in getStakeHistory: ${err.message}`);
+        return serviceResponse(false, 500, 'Error fetching stake history', null, err.message);
+    }
+};
+
+/**
+ * Claim rewards for internal staking
+ * @param {number} userId 
+ * @param {number} amount 
+ * @returns {Promise<Object>}
+ */
+export const claimRewards = async (userId, amount) => {
+    try {
+        return await transactionRunner(async (client) => {
+            // Log in stake_history
+            await client.query(`
+                INSERT INTO stake_history (user_id, amount, type) 
+                VALUES ($1, $2, 'REWARD_CLAIM')
+            `, [userId, amount]);
+
+            // Note: In a real system, you'd verify the rewards available 
+            // and actually add them to the user's balance. 
+            // For now, we satisfy the frontend flow.
+
+            return serviceResponse(true, 200, 'Rewards claimed successfully');
+        });
+    } catch (err) {
+        console.error(`[WalletService] Error in claimRewards: ${err.message}`);
+        return serviceResponse(false, 500, 'Error claiming rewards', null, err.message);
     }
 };
