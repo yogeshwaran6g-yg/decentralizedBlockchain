@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS profile (
     dob DATE,
     city VARCHAR(100),
     country VARCHAR(100),
+    profile_picture TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_profile_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
@@ -152,4 +153,23 @@ CREATE INDEX IF NOT EXISTS idx_stake_history_created_at ON stake_history(created
 CREATE INDEX IF NOT EXISTS idx_internal_stakes_user_id ON internal_stakes(user_id);
 CREATE INDEX IF NOT EXISTS idx_internal_stakes_status ON internal_stakes(status);
 CREATE INDEX IF NOT EXISTS idx_yeild_user_id ON yeild(user_id);
-CREATE INDEX IF NOT EXISTS idx_treasury_logs_created_at ON treasury_logs(created_at);
+
+CREATE TABLE IF NOT EXISTS tickets (
+    id BIGSERIAL PRIMARY KEY,
+    subject VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'Pending' CHECK (status IN ('Pending', 'In Progress', 'Resolved', 'Closed')),
+    priority VARCHAR(50) DEFAULT 'Medium' CHECK (priority IN ('Low', 'Medium', 'High')),
+    category VARCHAR(50) DEFAULT 'Other',
+    user_id BIGINT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_tickets_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
+);
+
+
+
+CREATE INDEX IF NOT EXISTS idx_tickets_user_id ON tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
+CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets(created_at);
+
