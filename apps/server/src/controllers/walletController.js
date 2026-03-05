@@ -13,12 +13,18 @@ export const getWalletBalance = async (req, res) => {
         }
 
         const balances = await blockchainService.getWalletBalance(address);
+        const internalInfo = await walletService.getWalletInfo(req.user.id);
 
-        return rtnRes(res, 200, "Wallet balance fetched successfully", {
+        const responseData = {
             address,
             ethBalance: balances.ethBalance,
-            usdtBalance: balances.usdtBalance
-        });
+            usdtBalance: balances.usdtBalance,
+            ownTokenBalance: internalInfo.data?.own_token || 0,
+            energyBalance: internalInfo.data?.energy_balance || 0,
+            lockedBalance: internalInfo.data?.locked_balance || 0
+        };
+
+        return rtnRes(res, 200, "Wallet balance fetched successfully", responseData);
     } catch (err) {
         console.error("Error from getWalletBalance controller:", err);
         return rtnRes(res, 500, "Internal Error fetching balance");
@@ -93,5 +99,51 @@ export const getWalletInfo = async (req, res) => {
     } catch (err) {
         console.error("Error from getWalletInfo controller:", err);
         return rtnRes(res, 500, "Internal Error fetching wallet info");
+    }
+};
+
+export const topUpInternal = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { amount } = req.body;
+
+        if (!userId) {
+            return rtnRes(res, 400, "User ID not found in session");
+        }
+
+        const topUpAmount = parseFloat(amount || 1000); // Default 1000 if not specified
+        const result = await walletService.topUpInternalToken(userId, topUpAmount);
+
+        return rtnRes(res, result.status, result.message, result.data);
+    } catch (err) {
+        console.error("Error from topUpInternal controller:", err);
+        return rtnRes(res, 500, "Internal Error topping up tokens");
+    }
+};
+
+export const updateBalance = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { type, amount } = req.body;
+
+        if (!userId) {
+            return rtnRes(res, 400, "User ID not found in session");
+        }
+
+        if (!type || !['NRG', 'DB'].includes(type.toUpperCase())) {
+            return rtnRes(res, 400, "Valid token type (NRG or DB) is required");
+        }
+
+        const newAmount = parseFloat(amount);
+        if (isNaN(newAmount) || newAmount < 0) {
+            return rtnRes(res, 400, "Valid non-negative amount is required");
+        }
+
+        const result = await walletService.updateWalletBalance(userId, type.toUpperCase(), newAmount);
+
+        return rtnRes(res, result.status, result.message, result.data);
+    } catch (err) {
+        console.error("Error from updateBalance controller:", err);
+        return rtnRes(res, 500, "Internal Error updating balance");
     }
 };

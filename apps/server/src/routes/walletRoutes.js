@@ -8,5 +8,7 @@ router.get('/info', authMiddleware, walletController.getWalletInfo);
 router.post('/faucet', authMiddleware, walletController.getTestEth);
 router.post('/record-stake', authMiddleware, walletController.recordStake);
 router.post('/stake-internal', authMiddleware, walletController.stakeInternal);
+router.post('/topup-internal', authMiddleware, walletController.topUpInternal);
+router.post('/update-balance', authMiddleware, walletController.updateBalance);
 
 export default router;

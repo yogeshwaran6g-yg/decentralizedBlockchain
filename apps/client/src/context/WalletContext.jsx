@@ -2,11 +2,14 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { ethers } from 'ethers';
 import { useAccount } from 'wagmi';
 import { toast } from 'react-toastify';
+import { getActiveNetwork } from '../config/networkConfig';
+import { api } from '../services/axios';
+import { API_ENDPOINTS } from '../utils/endpoints';
 
 const WalletContext = createContext(null);
 
-const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'; // USDT on Polygon
-const ADMIN_WALLET = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'; // Admin wallet from DB
+const activeNetwork = getActiveNetwork();
+const USDT_ADDRESS = activeNetwork.usdtAddress;
 
 const ERC20_ABI = [
     'function balanceOf(address owner) view returns (uint256)',
@@ -16,7 +19,7 @@ const ERC20_ABI = [
 
 export const WalletProvider = ({ children }) => {
     const { address, isConnected } = useAccount();
-    const [usdtBalance, setUsdtBalance] = useState('0.00'); // This will now represent "Own Token" balance
+    const [usdtBalance, setUsdtBalance] = useState('0.00'); // This now represents "DB Token" balance for simpler state management
     const [stakedAmount, setStakedAmount] = useState(0);
     const [accumulatedRewards, setAccumulatedRewards] = useState(0);
     const [totalEarned, setTotalEarned] = useState(0);
@@ -38,9 +41,11 @@ export const WalletProvider = ({ children }) => {
                 contract.decimals()
             ]);
 
-            setUsdtBalance(ethers.formatUnits(balance, decimals));
+            // Note: This is on-chain USDT balance
+            // However, the app seems to use setUsdtBalance for DB Tokens elsewhere.
+            // For now, we keep this as is but ensure backend takes priority if needed.
         } catch (error) {
-            console.error('Error fetching USDT balance:', error);
+            console.error('Error fetching on-chain balance:', error);
         } finally {
             setIsLoading(false);
         }
@@ -50,18 +55,14 @@ export const WalletProvider = ({ children }) => {
         if (!isConnected || !address) return;
 
         try {
-            const response = await fetch('/api/wallet/info', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            const result = await response.json();
-            if (result.success) {
-                setUsdtBalance(result.data.own_token_balance?.toString() || '0.00');
-                setStakedAmount(parseFloat(result.data.locked_balance || 0));
+            const result = await api.get(API_ENDPOINTS.WALLET.BALANCE);
+            if (result.status === 200) {
+                // The balance endpoint returns { ownTokenBalance, energyBalance, ... }
+                setUsdtBalance(result.data.ownTokenBalance?.toString() || '0.00');
+                setStakedAmount(parseFloat(result.data.lockedBalance || 0));
             }
         } catch (error) {
-            console.error('Error fetching wallet info:', error);
+            console.error('Error fetching wallet info from backend:', error);
         }
     }, [address, isConnected]);
 
@@ -74,7 +75,6 @@ export const WalletProvider = ({ children }) => {
         }, 30000);
         return () => clearInterval(interval);
     }, [fetchBalance, fetchWalletInfo]);
-
 
     useEffect(() => {
         if (stakedAmount <= 0) return;
@@ -95,7 +95,7 @@ export const WalletProvider = ({ children }) => {
         }
 
         if (numAmount > parseFloat(usdtBalance)) {
-            toast.error('Insufficient token balance');
+            toast.error('Insufficient token amount');
             return false;
         }
 
@@ -103,29 +103,17 @@ export const WalletProvider = ({ children }) => {
         try {
             toast.info('Initiating internal staking...');
 
-            // Record staking on backend
-            const response = await fetch('/api/wallet/stake-internal', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                },
-                body: JSON.stringify({
-                    amount: numAmount
-                })
+            const result = await api.post('/wallet/stake-internal', { amount: numAmount }, {
+                showSuccessToast: true
             });
 
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || 'Failed to stake tokens on server');
+            if (result.status === 200) {
+                setStakedAmount(prev => prev + numAmount);
+                setUsdtBalance(prev => (parseFloat(prev) - numAmount).toString());
+                fetchWalletInfo(); // Refresh both balances
+                return true;
             }
-
-            setStakedAmount(prev => prev + numAmount);
-            setUsdtBalance(prev => (parseFloat(prev) - numAmount).toString());
-            toast.success(`Successfully staked ${numAmount} tokens`);
-            fetchWalletInfo(); // Refresh both balances
-            return true;
+            return false;
         } catch (error) {
             console.error('Error staking tokens:', error);
             toast.error(error.message || 'Staking failed');
@@ -134,7 +122,6 @@ export const WalletProvider = ({ children }) => {
             setIsLoading(false);
         }
     };
-
 
     const claimRewards = () => {
         if (accumulatedRewards <= 0) {

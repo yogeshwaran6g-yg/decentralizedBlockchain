@@ -50,20 +50,13 @@ CREATE TABLE IF NOT EXISTS user_wallets (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL UNIQUE,
     energy_balance DECIMAL(18, 6) DEFAULT 0,
-    own_token_balance DECIMAL(18, 6) DEFAULT 0,
+    own_token DECIMAL(18, 6) DEFAULT 0,
     locked_balance DECIMAL(18, 6) DEFAULT 0,
     version INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_wallet_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
-
-DO $$ 
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_wallets' AND column_name = 'reward_token_balance') THEN
-        ALTER TABLE user_wallets RENAME COLUMN reward_token_balance TO own_token_balance;
-    END IF;
-END $$;
 
 CREATE TABLE IF NOT EXISTS user_nfts (
     id BIGSERIAL PRIMARY KEY,
