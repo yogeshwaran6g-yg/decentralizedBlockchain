@@ -59,14 +59,9 @@ export const WalletProvider = ({ children }) => {
         if (!token) return;
 
         try {
-            const response = await fetch('/api/v1/wallet/info', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            const result = await response.json();
+            const result = await api.get('/api/v1/wallet/info');
             if (result.success && result.data) {
-                const rawBalance = result.data.own_token_balance;
+                const rawBalance = result.data.own_token;
                 setOwnBalance(parseFloat(rawBalance || 0).toString());
                 setEnergyBalance(parseFloat(result.data.energy_balance || 0));
                 setStakedAmount(parseFloat(result.data.locked_balance || 0));
@@ -82,12 +77,7 @@ export const WalletProvider = ({ children }) => {
         if (!isConnected || !address) return;
 
         try {
-            const response = await fetch('/api/v1/wallet/stake-history', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            const result = await response.json();
+            const result = await api.get('/api/v1/wallet/stake-history');
             if (result.success) {
                 setStakeHistory(result.data);
             }
@@ -134,7 +124,7 @@ export const WalletProvider = ({ children }) => {
 
         setIsLoading(true);
         try {
-            const result = await api.post('/wallet/stake-internal', { amount: numAmount }, {
+            const result = await api.post('/api/v1/wallet/stake-internal', { amount: numAmount }, {
                 showSuccessToast: true
             });
 
@@ -164,19 +154,13 @@ export const WalletProvider = ({ children }) => {
         setIsLoading(true);
         try {
             const rewardsToClaim = accumulatedRewards;
-            const response = await fetch('/api/v1/wallet/claim-rewards', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                },
-                body: JSON.stringify({
-                    amount: rewardsToClaim
-                })
+            const result = await api.post('/api/v1/wallet/claim-rewards', {
+                amount: rewardsToClaim
+            }, {
+                showSuccessToast: true
             });
 
-            const result = await response.json();
-            if (!response.ok) {
+            if (!result.success) {
                 throw new Error(result.message || 'Failed to claim rewards on server');
             }
 
