@@ -10,5 +10,6 @@ router.post('/record-stake', authMiddleware, walletController.recordStake);
 router.post('/stake-internal', authMiddleware, walletController.stakeInternal);
 router.post('/topup-internal', authMiddleware, walletController.topUpInternal);
 router.post('/update-balance', authMiddleware, walletController.updateBalance);
+router.get('/transactions', authMiddleware, walletController.getTransactions);
 
 export default router;
