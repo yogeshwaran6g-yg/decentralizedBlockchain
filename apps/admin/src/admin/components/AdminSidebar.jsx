@@ -10,6 +10,7 @@ const AdminSidebar = ({ isOpen, onClose }) => {
         { name: 'NFT Management', icon: 'token', path: '/nft' },
         { name: 'Tokenomics', icon: 'currency_bitcoin', path: '/tokenomics' },
         { name: 'Stake History', icon: 'history', path: '/staking' },
+        { name: 'Swap History', icon: 'swap_horiz', path: '/swaps' },
         { name: 'System Logs', icon: 'terminal', path: '/logs' },
         { name: 'Settings', icon: 'settings', path: '/settings' },
     ];
