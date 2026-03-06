@@ -1,8 +1,21 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
+import { ethers } from 'ethers';
 import { toast } from 'react-toastify';
+import { getActiveNetwork } from '../config/networkConfig';
+import { api } from '../services/axios';
+import { API_ENDPOINTS } from '../utils/endpoints';
 
 const WalletContext = createContext(null);
+
+const activeNetwork = getActiveNetwork();
+const USDT_ADDRESS = activeNetwork.usdtAddress;
+
+const ERC20_ABI = [
+    'function balanceOf(address owner) view returns (uint256)',
+    'function decimals() view returns (uint8)',
+    'function transfer(address to, uint256 amount) returns (bool)',
+];
 
 export const WalletProvider = ({ children }) => {
     const { address, isConnected } = useAccount();
@@ -25,18 +38,17 @@ export const WalletProvider = ({ children }) => {
 
         setIsLoading(true);
         try {
-            const response = await fetch('/api/v1/wallet/balance', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            const result = await response.json();
-            if (result.success) {
-                setPolBalance(result.data.polBalance);
-                setUsdtBalance(result.data.usdtBalance);
-            }
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const contract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
+
+            const [balance, decimals] = await Promise.all([
+                contract.balanceOf(address),
+                contract.decimals()
+            ]);
+
+            setUsdtBalance(ethers.formatUnits(balance, decimals));
         } catch (error) {
-            console.error('Error fetching on-chain balances:', error);
+            console.error('Error fetching on-chain balance:', error);
         } finally {
             setIsLoading(false);
         }
@@ -44,7 +56,7 @@ export const WalletProvider = ({ children }) => {
 
     const fetchWalletInfo = useCallback(async () => {
         const token = localStorage.getItem('authToken');
-        if (!token) return; // Only require JWT auth, not wallet connection
+        if (!token) return;
 
         try {
             const response = await fetch('/api/v1/wallet/info', {
@@ -96,7 +108,6 @@ export const WalletProvider = ({ children }) => {
         return () => clearInterval(interval);
     }, [fetchBalance, fetchWalletInfo, fetchStakeHistory]);
 
-
     useEffect(() => {
         if (stakedAmount <= 0) return;
 
@@ -123,28 +134,18 @@ export const WalletProvider = ({ children }) => {
 
         setIsLoading(true);
         try {
-
-            const response = await fetch('/api/v1/wallet/stake-internal', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                },
-                body: JSON.stringify({
-                    amount: numAmount
-                })
+            const result = await api.post('/wallet/stake-internal', { amount: numAmount }, {
+                showSuccessToast: true
             });
 
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || 'Failed to stake tokens on server');
+            if (result.status === 200) {
+                setStakedAmount(prev => prev + numAmount);
+                setOwnBalance(prev => (parseFloat(prev) - numAmount).toString());
+                fetchWalletInfo();
+                fetchStakeHistory();
+                return true;
             }
-
-            toast.success(`Successfully staked ${numAmount} tokens`);
-            fetchWalletInfo();
-            fetchStakeHistory();
-            return true;
+            return false;
         } catch (error) {
             console.error('Error staking tokens:', error);
             toast.error(error.message || 'Staking failed');
@@ -153,7 +154,6 @@ export const WalletProvider = ({ children }) => {
             setIsLoading(false);
         }
     };
-
 
     const claimRewards = async () => {
         if (accumulatedRewards <= 0) {
