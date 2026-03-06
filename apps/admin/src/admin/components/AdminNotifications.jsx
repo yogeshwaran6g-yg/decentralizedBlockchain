@@ -10,20 +10,35 @@ const AdminNotifications = () => {
     const [targetUserId, setTargetUserId] = useState('');
     const [sentNotifications, setSentNotifications] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [totalRecords, setTotalRecords] = useState(0);
 
     useEffect(() => {
-        fetchSentNotifications();
+        fetchSentNotifications(1, true);
     }, []);
 
-    const fetchSentNotifications = async () => {
+    const fetchSentNotifications = async (pageNum = 1, reset = false) => {
+        setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/admin/sent`);
+            const res = await fetch(`${API_URL}/admin/sent?page=${pageNum}&limit=5`);
             if (!res.ok) throw new Error('Failed to fetch notifications');
             const data = await res.json();
-            setSentNotifications(data);
+
+            if (reset) {
+                setSentNotifications(data.data);
+            } else {
+                setSentNotifications(prev => [...prev, ...data.data]);
+            }
+
+            setTotalRecords(data.total);
+            setHasMore(pageNum < data.pages);
+            setPage(pageNum);
         } catch (err) {
             console.error('Error fetching sent notifications:', err);
             toast.error('Failed to load notification history');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -53,7 +68,7 @@ const AdminNotifications = () => {
             setTitle('');
             setMessage('');
             setTargetUserId('');
-            fetchSentNotifications();
+            fetchSentNotifications(1, true);
         } catch (err) {
             console.error('Error sending notification:', err);
             toast.error('Failed to send notification');
@@ -69,10 +84,17 @@ const AdminNotifications = () => {
             if (!res.ok) throw new Error('Failed to delete');
 
             setSentNotifications(prev => prev.filter(n => n.id !== id));
+            setTotalRecords(prev => prev - 1);
             toast.success('Notification record deleted');
         } catch (err) {
             console.error('Error deleting notification:', err);
             toast.error('Failed to delete record');
+        }
+    };
+
+    const handleLoadMore = () => {
+        if (!loading && hasMore) {
+            fetchSentNotifications(page + 1);
         }
     };
 
@@ -151,7 +173,7 @@ const AdminNotifications = () => {
                             disabled={loading}
                             className="w-full bg-yellow-400 text-black font-black py-4 rounded-2xl shadow-xl shadow-yellow-400/20 hover:shadow-yellow-400/30 hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3"
                         >
-                            {loading ? (
+                            {loading && sentNotifications.length === 0 ? (
                                 <div className="size-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                             ) : (
                                 <span className="material-symbols-outlined text-lg">campaign</span>
@@ -169,62 +191,79 @@ const AdminNotifications = () => {
                             Recently Sent
                         </h2>
                         <span className="px-3 py-1 bg-white/5 text-slate-500 text-[9px] font-black rounded-lg border border-white/5 uppercase tracking-widest">
-                            {sentNotifications.length} Records
+                            {totalRecords} Records
                         </span>
                     </div>
 
                     <div className="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
-                        {sentNotifications.length === 0 ? (
+                        {sentNotifications.length === 0 && !loading ? (
                             <div className="p-20 text-center border border-dashed border-white/10 rounded-3xl text-slate-600 font-black uppercase tracking-widest">
                                 No notification history found
                             </div>
                         ) : (
-                            sentNotifications.map(notification => (
-                                <div key={notification.id} className="bg-card-dark border border-white/5 rounded-2xl p-5 lg:p-6 flex flex-col lg:flex-row gap-5 hover:border-white/10 transition-all group">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${notification.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-500' :
-                                        notification.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
-                                            notification.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' :
-                                                'bg-blue-500/10 border-blue-500/20 text-blue-500'
-                                        }`}>
-                                        <span className="material-symbols-outlined">
-                                            {notification.type === 'success' ? 'check_circle' :
-                                                notification.type === 'error' ? 'error' :
-                                                    notification.type === 'warning' ? 'warning' : 'info'}
-                                        </span>
-                                    </div>
+                            <>
+                                {sentNotifications.map(notification => (
+                                    <div key={notification.id} className="bg-card-dark border border-white/5 rounded-2xl p-5 lg:p-6 flex flex-col lg:flex-row gap-5 hover:border-white/10 transition-all group">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${notification.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-500' :
+                                            notification.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                                                notification.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500' :
+                                                    'bg-blue-500/10 border-blue-500/20 text-blue-500'
+                                            }`}>
+                                            <span className="material-symbols-outlined">
+                                                {notification.type === 'success' ? 'check_circle' :
+                                                    notification.type === 'error' ? 'error' :
+                                                        notification.type === 'warning' ? 'warning' : 'info'}
+                                            </span>
+                                        </div>
 
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h3 className="text-white font-bold tracking-tight text-lg truncate">
-                                                {notification.title}
-                                            </h3>
-                                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                                                {new Date(notification.created_at).toLocaleString()}
-                                            </span>
-                                        </div>
-                                        <p className="text-slate-400 text-sm leading-relaxed mb-4">
-                                            {notification.message}
-                                        </p>
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                                                <span className="material-symbols-outlined text-[14px]">person</span>
-                                                User ID: {notification.user_id}
-                                            </span>
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${notification.is_read ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-slate-500/10 text-slate-500 border-white/5'
-                                                }`}>
-                                                {notification.is_read ? 'Read' : 'Unread'}
-                                            </span>
-                                            <button
-                                                onClick={() => handleDelete(notification.id)}
-                                                className="ml-auto text-[9px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all"
-                                            >
-                                                <span className="material-symbols-outlined text-[14px]">delete</span>
-                                                Delete Record
-                                            </button>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h3 className="text-white font-bold tracking-tight text-lg truncate">
+                                                    {notification.title}
+                                                </h3>
+                                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest text-right">
+                                                    {new Date(notification.created_at).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <p className="text-slate-400 text-sm leading-relaxed mb-4 break-all whitespace-pre-wrap" style={{ overflowWrap: 'anywhere' }}>
+                                                {notification.message}
+                                            </p>
+                                            <div className="flex items-center gap-4 flex-wrap">
+                                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                                                    <span className="material-symbols-outlined text-[14px]">person</span>
+                                                    User ID: {notification.user_id}
+                                                </span>
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${notification.is_read ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-slate-500/10 text-slate-500 border-white/5'
+                                                    }`}>
+                                                    {notification.is_read ? 'Read' : 'Unread'}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleDelete(notification.id)}
+                                                    className="ml-auto text-[9px] font-black text-red-500 hover:text-red-400 uppercase tracking-widest flex items-center gap-1.5 group-hover:opacity-100 lg:opacity-0 transition-all"
+                                                >
+                                                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                                                    Delete Record
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))
+                                ))}
+
+                                {hasMore && (
+                                    <button
+                                        onClick={handleLoadMore}
+                                        disabled={loading}
+                                        className="w-full py-4 bg-white/5 border border-white/5 rounded-2xl text-[10px] font-black text-slate-400 hover:text-white hover:bg-white/10 transition-all uppercase tracking-[0.2em] flex items-center justify-center gap-3"
+                                    >
+                                        {loading ? (
+                                            <div className="size-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        ) : (
+                                            <span className="material-symbols-outlined">expand_more</span>
+                                        )}
+                                        {loading ? 'Fetching Records...' : 'Load More Notifications'}
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

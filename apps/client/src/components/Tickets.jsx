@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import PageHeading from './PageHeading';
 import { toast } from 'react-toastify';
 
+const API_URL = 'http://localhost:5001/api/tickets';
+const PAGE_LIMIT = 5;
+const CATEGORIES = ['Technical Issue', 'Account Access', 'Payment Problem', 'Feature Request', 'Other'];
+const PRIORITIES = ['Low', 'Medium', 'High'];
+
 const Tickets = () => {
     const [formData, setFormData] = useState({
         category: 'Technical Issue',
@@ -13,9 +18,6 @@ const Tickets = () => {
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
     const categoryRef = useRef(null);
 
-    const categories = ['Technical Issue', 'Account Access', 'Payment Problem', 'Feature Request', 'Other'];
-    const priorities = ['Low', 'Medium', 'High',];
-
     const [tickets, setTickets] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -24,10 +26,14 @@ const Tickets = () => {
     const [totalCount, setTotalCount] = useState(0);
 
     const sentinelRef = useRef(null);
-    const API_URL = 'http://localhost:5001/api/tickets';
-    const PAGE_LIMIT = 5;
+    const scrollContainerRef = useRef(null);
+    const fetchKeyRef = useRef(null);
 
     const fetchTickets = useCallback(async (pageNum, replace = false) => {
+        const key = `tickets-${pageNum}`;
+        if (fetchKeyRef.current === key) return;
+        fetchKeyRef.current = key;
+
         try {
             pageNum === 1 ? setLoading(true) : setLoadingMore(true);
             const response = await fetch(`${API_URL}?page=${pageNum}&limit=${PAGE_LIMIT}`);
@@ -44,9 +50,13 @@ const Tickets = () => {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [API_URL]);
+    }, []);
 
     useEffect(() => {
+        fetchKeyRef.current = null;
+        setPage(1);
+        setHasMore(true);
+        setTickets([]);
         fetchTickets(1, true);
     }, [fetchTickets]);
 
@@ -67,7 +77,8 @@ const Tickets = () => {
 
     useEffect(() => {
         const sentinel = sentinelRef.current;
-        if (!sentinel) return;
+        const container = scrollContainerRef.current;
+        if (!sentinel || !container) return;
 
         const observer = new IntersectionObserver(
             ([entry]) => {
@@ -75,7 +86,10 @@ const Tickets = () => {
                     setPage(prev => prev + 1);
                 }
             },
-            { threshold: 0.1 }
+            {
+                root: container,
+                threshold: 0.1
+            }
         );
         observer.observe(sentinel);
         return () => observer.disconnect();
@@ -106,7 +120,8 @@ const Tickets = () => {
 
             if (response.ok) {
                 const newTicket = await response.json();
-                setTickets([newTicket, ...tickets.slice(0, tickets.length >= PAGE_LIMIT ? tickets.length - 1 : tickets.length)]);
+                // Prepend new ticket to the list and increment total count
+                setTickets(prev => [newTicket, ...prev]);
                 setTotalCount(prev => prev + 1);
                 setFormData({ ...formData, subject: '', description: '' });
                 toast.success('Ticket submitted successfully!');
@@ -156,7 +171,7 @@ const Tickets = () => {
                                 {isCategoryOpen && (
                                     <div className="absolute top-full left-0 w-full mt-2 bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                                         <div className="py-1">
-                                            {categories.map((cat) => (
+                                            {CATEGORIES.map((cat) => (
                                                 <button
                                                     key={cat}
                                                     type="button"
@@ -232,7 +247,10 @@ const Tickets = () => {
                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{totalCount} Total</span>
                     </div>
 
-                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                    <div
+                        ref={scrollContainerRef}
+                        className="space-y-4 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent scroll-smooth"
+                    >
                         {loading && tickets.length === 0 ? (
                             <div className="p-12 text-center text-gray-500">
                                 <div className="w-8 h-8 border-2 border-accent-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
