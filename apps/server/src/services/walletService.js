@@ -1,11 +1,11 @@
 import { ethers } from 'ethers';
 import { queryRunner, transactionRunner } from '../config/db.js';
 import { serviceResponse } from '../utils/helper.js';
+import { ACTIVE_CONFIG } from '../config/constants.js';
 
-const RPC_URL = 'https://polygon-rpc.com';
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const USDT_ADDRESS = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'.toLowerCase();
-const ADMIN_WALLET = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266'.toLowerCase();
+const provider = new ethers.JsonRpcProvider(ACTIVE_CONFIG.RPC_URLS[0]);
+const USDT_ADDRESS = ACTIVE_CONFIG.USDT_ADDRESS.toLowerCase();
+const ADMIN_WALLET = ACTIVE_CONFIG.ADMIN_WALLET.toLowerCase();
 
 /**
  * Record a successful on-chain staking transaction
@@ -74,25 +74,26 @@ export const recordStakingTransaction = async (userId, amount, txHash) => {
 export const stakeInternalToken = async (userId, amount) => {
     try {
         return await transactionRunner(async (client) => {
-    
+
             const balanceRes = await client.query(
-                'SELECT own_token_balance FROM user_wallets WHERE user_id = $1',
+                'SELECT own_token FROM user_wallets WHERE user_id = $1',
                 [userId]
             );
 
-            if (balanceRes.rows.length === 0 || parseFloat(balanceRes.rows[0].own_token_balance) < amount) {
+            if (balanceRes.rows.length === 0 || parseFloat(balanceRes.rows[0].own_token) < amount) {
                 return serviceResponse(false, 400, 'Insufficient internal token balance');
             }
 
 
             await client.query(`
                 UPDATE user_wallets 
-                SET own_token_balance = own_token_balance - $1,
+                SET own_token = own_token - $1,
+                    locked_balance = locked_balance + $1,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE user_id = $2
             `, [amount, userId]);
 
-     
+
             await client.query(`
                 INSERT INTO internal_stakes (user_id, amount, status)
                 VALUES ($1, $2, 'ACTIVE')
@@ -121,26 +122,74 @@ export const stakeInternalToken = async (userId, amount) => {
  * @param {number} userId 
  * @returns {Promise<Object>}
  */
+/**
+ * Add amount to user's internal token balance (Faucet functionality)
+ * @param {number} userId 
+ * @param {number} amount 
+ * @returns {Promise<Object>}
+ */
+export const topUpInternalToken = async (userId, amount) => {
+    try {
+        await queryRunner(`
+            INSERT INTO user_wallets (user_id, own_token) 
+            VALUES ($1, $2) 
+            ON CONFLICT (user_id) DO UPDATE SET 
+                own_token = user_wallets.own_token + $2,
+                updated_at = CURRENT_TIMESTAMP
+        `, [userId, amount]);
+
+        return serviceResponse(true, 200, `${amount} DB Tokens added successfully!`);
+    } catch (err) {
+        console.error(`[WalletService] Error in topUpInternalToken: ${err.message}`);
+        return serviceResponse(false, 500, 'Error topping up internal balance', null, err.message);
+    }
+};
+
+/**
+ * Manually update wallet balance for testing
+ * @param {number} userId 
+ * @param {string} type - 'NRG' or 'DB'
+ * @param {number} amount 
+ * @returns {Promise<Object>}
+ */
+export const updateWalletBalance = async (userId, type, amount) => {
+    try {
+        let column;
+        switch (type.toUpperCase()) {
+            case 'NRG': column = 'energy_balance'; break;
+            case 'DB': column = 'own_token'; break;
+            case 'LOCKED': column = 'locked_balance'; break;
+            default: column = 'own_token';
+        }
+
+        await queryRunner(`
+            INSERT INTO user_wallets (user_id, ${column}) 
+            VALUES ($1, $2) 
+            ON CONFLICT (user_id) DO UPDATE SET 
+                ${column} = $2,
+                updated_at = CURRENT_TIMESTAMP
+        `, [userId, amount]);
+
+        return serviceResponse(true, 200, `${type} balance updated to ${amount}`);
+    } catch (err) {
+        console.error(`[WalletService] Error in updateWalletBalance: ${err.message}`);
+        return serviceResponse(false, 500, 'Error updating balance', null, err.message);
+    }
+};
+
 export const getWalletInfo = async (userId) => {
     try {
         const walletRes = await queryRunner(
-            'SELECT energy_balance, own_token_balance FROM user_wallets WHERE user_id = $1',
+            'SELECT energy_balance, own_token, locked_balance FROM user_wallets WHERE user_id = $1',
             [userId]
         );
 
-        const stakingRes = await queryRunner(
-            `SELECT COALESCE(SUM(amount), 0) 
-            as locked_balance FROM internal_stakes WHERE user_id = $1 AND status = 'ACTIVE'`,
-            [userId]
-        );
-
-        const wallet = walletRes[0] || { energy_balance: 0, own_token_balance: 0 };
-        const locked_balance = parseFloat(stakingRes[0]?.locked_balance || 0);
+        const wallet = walletRes[0] || { energy_balance: 0, own_token: 0, locked_balance: 0 };
 
         return serviceResponse(true, 200, 'Wallet info fetched successfully', {
             energy_balance: wallet.energy_balance,
-            own_token_balance: wallet.own_token_balance,
-            locked_balance: locked_balance
+            own_token: wallet.own_token,
+            locked_balance: wallet.locked_balance
         });
     } catch (err) {
         console.error(`[WalletService] Error in getWalletInfo: ${err.message}`);

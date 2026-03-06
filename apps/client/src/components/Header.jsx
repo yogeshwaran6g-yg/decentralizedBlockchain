@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, ChevronDown, Menu, LogOut, Wallet, ExternalLink, Copy, Check } from 'lucide-react';
 import { useLogout } from '../hooks/useAuth';
@@ -10,6 +10,7 @@ const Header = ({ onMenuClick }) => {
     const [address, setAddress] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
     const [copied, setCopied] = useState(false);
+    const dropdownRef = useRef(null);
     const logout = useLogout();
     const { data: balanceData } = useWalletBalance();
 
@@ -24,6 +25,23 @@ const Header = ({ onMenuClick }) => {
             console.error('Error parsing user from localStorage', e);
         }
     }, []);
+
+    // Click outside handler
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+
+        if (showDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showDropdown]);
 
     const formatAddress = (addr) => {
         if (!addr) return '';
@@ -52,7 +70,7 @@ const Header = ({ onMenuClick }) => {
 
             <div className="flex items-center gap-4 sm:gap-6">
                 {/* Status Pill / Wallet Address */}
-                <div className="relative">
+                <div className="relative" ref={dropdownRef}>
                     <div
                         onClick={() => address && setShowDropdown(!showDropdown)}
                         className="hidden sm:flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:border-accent-gold/30 cursor-pointer transition-all duration-300 group shadow-lg"
@@ -67,12 +85,6 @@ const Header = ({ onMenuClick }) => {
                     <AnimatePresence>
                         {showDropdown && address && (
                             <>
-                                {/* Backdrop to close dropdown */}
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setShowDropdown(false)}
-                                ></div>
-
                                 <motion.div
                                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -99,7 +111,7 @@ const Header = ({ onMenuClick }) => {
                                                 </button>
                                             </div>
                                         </div>
- 
+
                                         <div className="bg-white/5 rounded-xl p-4 border border-white/5 space-y-4">
                                             <div>
                                                 <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest block mb-2">Native Balance</span>

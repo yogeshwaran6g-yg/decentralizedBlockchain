@@ -13,7 +13,7 @@ export const walletApiService = {
             });
             // The axios interceptor returns response.data (the whole { status, message, data } object)
             // We need to return the nested data object
-            return response?.data || { ethBalance: '0.00', usdtBalance: '0.00' };
+            return response?.data || { ethBalance: '0.00', usdtBalance: '0.00', ownTokenBalance: '0' };
         } catch (error) {
             return handleServiceError(error, 'WalletApiService.getBalance');
         }
@@ -32,6 +32,39 @@ export const walletApiService = {
             return data;
         } catch (error) {
             return handleServiceError(error, 'WalletApiService.requestFaucet');
+        }
+    },
+
+    /**
+     * Top up internal OWN TOKEN balance (Faucet)
+     * @param {number} amount 
+     * @returns {Promise<Object>}
+     */
+    async topUpInternal(amount = 1000) {
+        try {
+            const data = await api.post(API_ENDPOINTS.WALLET.TOPUP_INTERNAL, { amount }, {
+                showSuccessToast: true
+            });
+            return data;
+        } catch (error) {
+            return handleServiceError(error, 'WalletApiService.topUpInternal');
+        }
+    },
+
+    /**
+     * Manually update wallet balance (Admin/Testing)
+     * @param {string} type - 'NRG' or 'DB'
+     * @param {number} amount 
+     * @returns {Promise<Object>}
+     */
+    async updateBalance(type, amount) {
+        try {
+            const data = await api.post(API_ENDPOINTS.WALLET.UPDATE_BALANCE, { type, amount }, {
+                showSuccessToast: true
+            });
+            return data;
+        } catch (error) {
+            return handleServiceError(error, 'WalletApiService.updateBalance');
         }
     }
 };
