@@ -17,7 +17,7 @@ const Notifications = () => {
 
 
     const sentinelRef = useRef(null);
-
+    const scrollContainerRef = useRef(null);
     const fetchKeyRef = useRef(null);
 
 
@@ -31,13 +31,11 @@ const Notifications = () => {
             const res = await axios.get(API_URL, {
                 params: { tab, page: pageNum, limit: PAGE_LIMIT },
             });
-            const { data, hasMore: more, total } = res.data;
+            const { data, hasMore: more, unreadCount: count } = res.data;
 
             setNotifications(prev => replace ? data : [...prev, ...data]);
             setHasMore(more);
-
-
-            if (tab === 'all') setUnreadCount(total);
+            setUnreadCount(count);
         } catch (err) {
             console.error('Error fetching notifications:', err);
             toast.error('Failed to load notifications', { toastId: 'fetch-notifications-error' });
@@ -66,7 +64,8 @@ const Notifications = () => {
 
     useEffect(() => {
         const sentinel = sentinelRef.current;
-        if (!sentinel) return;
+        const container = scrollContainerRef.current;
+        if (!sentinel || !container) return;
 
         const observer = new IntersectionObserver(
             ([entry]) => {
@@ -74,7 +73,10 @@ const Notifications = () => {
                     setPage(prev => prev + 1);
                 }
             },
-            { threshold: 0.1 }
+            {
+                root: container,
+                threshold: 0.1
+            }
         );
         observer.observe(sentinel);
         return () => observer.disconnect();
@@ -84,15 +86,19 @@ const Notifications = () => {
     const markAsRead = async (id) => {
         try {
             await axios.patch(`${API_URL}/${id}/read`);
-            // Remove from 'all' list; if in 'read' list update locally
-            if (activeTab === 'all') {
+
+            if (activeTab === 'unread') {
+
                 setNotifications(prev => prev.filter(n => n.id !== id));
-                setUnreadCount(prev => Math.max(0, prev - 1));
             } else {
+
                 setNotifications(prev =>
                     prev.map(n => n.id === id ? { ...n, is_read: true } : n)
                 );
             }
+
+
+            setUnreadCount(prev => Math.max(0, prev - 1));
             toast.success('Notification marked as read');
         } catch (err) {
             console.error('Error marking as read:', err);
@@ -166,7 +172,7 @@ const Notifications = () => {
 
                 {/* ── Tabs ── */}
                 <div className="flex border-b border-white/5">
-                    {/* All (unread) tab */}
+                    {/* All (everything) tab */}
                     <button
                         onClick={() => setActiveTab('all')}
                         className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center gap-2
@@ -175,31 +181,34 @@ const Notifications = () => {
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
-                        <span className="material-symbols-outlined text-base">mark_email_unread</span>
+                        <span className="material-symbols-outlined text-base">mail</span>
                         All
+                    </button>
+
+                    {/* Unread tab */}
+                    <button
+                        onClick={() => setActiveTab('unread')}
+                        className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center gap-2
+                            ${activeTab === 'unread'
+                                ? 'text-accent-gold border-b-2 border-accent-gold bg-accent-gold/5'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        <span className="material-symbols-outlined text-base">mark_email_unread</span>
+                        Unread
                         {unreadCount > 0 && (
                             <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-black bg-accent-gold text-black leading-none">
                                 {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                         )}
                     </button>
-
-                    {/* Read tab */}
-                    <button
-                        onClick={() => setActiveTab('read')}
-                        className={`flex-1 py-3 text-sm font-bold transition-colors flex items-center justify-center gap-2
-                            ${activeTab === 'read'
-                                ? 'text-accent-gold border-b-2 border-accent-gold bg-accent-gold/5'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                            }`}
-                    >
-                        <span className="material-symbols-outlined text-base">done_all</span>
-                        Read
-                    </button>
                 </div>
 
                 {/* ── List ── */}
-                <div className="divide-y divide-white/5 max-h-[520px] overflow-y-auto">
+                <div
+                    ref={scrollContainerRef}
+                    className="divide-y divide-white/5 max-h-[520px] overflow-y-auto scroll-smooth"
+                >
                     {loading ? (
                         <div className="p-12 text-center text-gray-500">
                             <div className="w-8 h-8 border-2 border-accent-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -208,18 +217,18 @@ const Notifications = () => {
                     ) : notifications.length === 0 ? (
                         <div className="p-12 text-center text-gray-500">
                             <span className="material-symbols-outlined text-4xl mb-2 block">
-                                {activeTab === 'all' ? 'notifications_off' : 'drafts'}
+                                {activeTab === 'all' ? 'notifications_off' : 'mark_email_read'}
                             </span>
                             {activeTab === 'all'
-                                ? 'No unread notifications — you\'re all caught up!'
-                                : 'No read notifications yet.'}
+                                ? 'No notifications yet.'
+                                : 'No unread notifications — you\'re all caught up!'}
                         </div>
                     ) : (
                         notifications.map((notification) => (
                             <div
                                 key={notification.id}
                                 className={`p-6 transition-all hover:bg-white/[0.02] flex gap-4
-                                    ${activeTab === 'all' ? 'bg-accent-gold/[0.02]' : 'opacity-70'}`}
+                                    ${!notification.is_read ? 'bg-accent-gold/[0.02]' : 'opacity-70'}`}
                             >
                                 {/* Icon */}
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${getTypeStyles(notification.type)}`}>
@@ -229,7 +238,7 @@ const Notifications = () => {
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between mb-1">
-                                        <h3 className={`font-bold truncate ${activeTab === 'read' ? 'text-gray-300' : 'text-white'}`}>
+                                        <h3 className={`font-bold truncate ${notification.is_read ? 'text-gray-300' : 'text-white'}`}>
                                             {notification.title}
                                         </h3>
                                         <span className="text-[10px] text-gray-500 whitespace-nowrap ml-3">
@@ -238,15 +247,15 @@ const Notifications = () => {
                                     </div>
 
                                     {/* Scrollable description */}
-                                    <div className="w-1/2 max-h-10 overflow-y-auto pr-1 mb-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                                        <p className="text-sm text-gray-400 leading-relaxed break-words">
+                                    <div className="w-full max-h-32 overflow-y-auto pr-1 mb-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent" style={{ overflowWrap: 'anywhere' }}>
+                                        <p className="text-sm text-gray-400 leading-relaxed break-all whitespace-pre-wrap">
                                             {notification.message}
                                         </p>
                                     </div>
 
                                     {/* Actions */}
                                     <div className="flex items-center gap-4">
-                                        {activeTab === 'all' && (
+                                        {!notification.is_read && (
                                             <button
                                                 onClick={() => markAsRead(notification.id)}
                                                 className="text-xs font-bold text-accent-gold hover:underline flex items-center gap-1"
@@ -275,7 +284,7 @@ const Notifications = () => {
                                 </div>
 
                                 {/* Unread dot */}
-                                {activeTab === 'all' && (
+                                {!notification.is_read && (
                                     <div className="w-2 h-2 rounded-full bg-accent-gold mt-2 shrink-0 shadow-[0_0_10px_rgba(212,175,55,0.8)]" />
                                 )}
                             </div>

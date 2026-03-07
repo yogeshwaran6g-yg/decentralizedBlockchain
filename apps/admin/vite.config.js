@@ -9,8 +9,16 @@ export default defineConfig({
         host: '127.0.0.1',
         allowedHosts: ['.csb.app', 'd3wqxd-5174.csb.app'],
         proxy: {
-            '/api': {
+            '/api/v1': {
                 target: process.env.VITE_API_URL || 'http://localhost:4000',
+                changeOrigin: true,
+            },
+            '/api/notifications': {
+                target: 'http://localhost:5001',
+                changeOrigin: true,
+            },
+            '/api/tickets': {
+                target: 'http://localhost:5001',
                 changeOrigin: true,
             }
         }

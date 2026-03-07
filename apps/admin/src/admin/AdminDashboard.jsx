@@ -7,6 +7,8 @@ import UserManagement from './components/UserManagement';
 import UserDetail from './components/UserDetail';
 import Treasury from './components/Treasury';
 import StakeHistory from './components/StakeHistory';
+import AdminNotifications from './components/AdminNotifications';
+import AdminTickets from './components/AdminTickets';
 import SwapHistory from './components/SwapHistory';
 import Login from './components/Login';
 
@@ -246,8 +248,8 @@ const AdminDashboard = () => {
         <AuthProvider>
             <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route 
-                    path="*" 
+                <Route
+                    path="*"
                     element={
                         <ProtectedRoute>
                             <Routes>
@@ -259,11 +261,13 @@ const AdminDashboard = () => {
                                     <Route path="treasury" element={<Treasury />} />
                                     <Route path="staking" element={<StakeHistory />} />
                                     <Route path="swaps" element={<SwapHistory />} />
+                                    <Route path="notifications" element={<AdminNotifications />} />
+                                    <Route path="tickets" element={<AdminTickets />} />
                                     <Route path="*" element={<Navigate to="/" replace />} />
                                 </Route>
                             </Routes>
                         </ProtectedRoute>
-                    } 
+                    }
                 />
             </Routes>
         </AuthProvider>
