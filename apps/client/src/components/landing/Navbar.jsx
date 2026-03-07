@@ -6,7 +6,7 @@ import { useAuthContext } from '../../context/AuthContext'
 
 export default function Navbar({ onConnectClick }) {
     const { address, isConnected } = useAccount()
-    const { isAuthenticated } = useAuthContext();
+    const { isAuthenticated, isLoggingIn } = useAuthContext();
     const [isOpen, setIsOpen] = React.useState(false)
     const [scrolled, setScrolled] = React.useState(false)
 
@@ -64,7 +64,7 @@ export default function Navbar({ onConnectClick }) {
                                 >
                                     <Wallet size={16} />
                                     {isConnected
-                                        ? (isAuthenticated ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Sign to Login')
+                                        ? (isAuthenticated ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : (isLoggingIn ? 'Authenticating...' : 'Connecting...'))
                                         : 'Connect Wallet'}
                                 </motion.button>
                             </div>
@@ -113,7 +113,7 @@ export default function Navbar({ onConnectClick }) {
                                 >
                                     <Wallet size={18} />
                                     {isConnected
-                                        ? (isAuthenticated ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Sign to Login')
+                                        ? (isAuthenticated ? `${address?.slice(0, 6)}...${address?.slice(-4)}` : (isLoggingIn ? 'Authenticating...' : 'Connecting...'))
                                         : 'Connect Wallet'}
                                 </button>
                             </div>

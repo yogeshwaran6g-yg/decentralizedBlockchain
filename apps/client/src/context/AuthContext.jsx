@@ -23,6 +23,8 @@ export const AuthProvider = ({ children }) => {
         return !!token && token !== 'undefined' && token !== 'null';
     });
 
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
+
     useEffect(() => {
         const token = localStorage.getItem('authToken');
         const storedUserJSON = localStorage.getItem('user');
@@ -75,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     }, [address, isConnected]);
 
     return (
-        <AuthContext.Provider value={{ user, isAuthenticated, setUser, setIsAuthenticated }}>
+        <AuthContext.Provider value={{ user, isAuthenticated, isLoggingIn, setUser, setIsAuthenticated, setIsLoggingIn }}>
             {children}
         </AuthContext.Provider>
     );

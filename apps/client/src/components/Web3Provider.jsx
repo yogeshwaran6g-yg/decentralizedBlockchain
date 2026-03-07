@@ -39,7 +39,7 @@ createAppKit({
         '--w3m-accent': '#D4AF37',
         '--w3m-background-color': '#0b0b0f',
         '--w3m-font-family': "'Orbitron', sans-serif",
-        '--w3m-border-radius-master': '12px',
+        // '--w3m-border-radius-master': '12px',
         '--w3m-z-index': '9999',
         '--w3m-color-mix': '#D4AF37',
         '--w3m-color-mix-strength': 15

@@ -24,12 +24,31 @@ export function WalletAuthListener() {
     const isAuthenticating = useRef(false);
 
     useEffect(() => {
-        const handleAutoLogin = async () => {
+        const handleLogin = async (isManual = false) => {
+            const token = localStorage.getItem('authToken');
+            const isCancelled = sessionStorage.getItem('autoLoginCancelled');
+
+            // If manual, we clear the cancellation flag
+            if (isManual) {
+                sessionStorage.removeItem('autoLoginCancelled');
+            }
+
+            // Trigger if:
+            // 1. Connected
+            // 2. Not authenticated
+            // 3. Not currently authenticating (global state)
+            // 4. (No token OR manual trigger)
+            // 5. (Not cancelled OR manual trigger)
             if (isConnected && address && !isAuthenticated && !isAuthenticating.current) {
+                if (!isManual && (token || isCancelled)) return;
+
                 isAuthenticating.current = true;
 
+                // Slightly shorter delay to ensure connector is ready but feel faster
+                await new Promise(resolve => setTimeout(resolve, isManual ? 100 : 400));
+
                 try {
-                    // 1. Get a fresh nonce (referralCode is already in the hook's queryKey)
+                    // 1. Get a fresh nonce
                     const result = await fetchNonce();
                     const currentNonce = result.data;
 
@@ -37,20 +56,37 @@ export function WalletAuthListener() {
                         // 2. Trigger the login (signature prompt)
                         const loginResult = await login(currentNonce);
                         if (loginResult) {
-                            // Clear referral code after successful login
                             localStorage.removeItem('referralCode');
                             navigate('/dashboard');
                         }
                     }
                 } catch (error) {
-                    console.error('Auto-login failed:', error);
+                    console.error('Wallet authentication failed:', error);
+                    // If it was a rejection, set the cancellation flag
+                    if (error.code === 4001 || error.message?.includes('User rejected')) {
+                        sessionStorage.setItem('autoLoginCancelled', 'true');
+                    }
                 } finally {
                     isAuthenticating.current = false;
                 }
             }
         };
 
-        handleAutoLogin();
+        const onManualTrigger = () => {
+            console.log('[WalletAuthListener] Manual trigger received');
+            handleLogin(true);
+        };
+
+        window.addEventListener('trigger-wallet-auth', onManualTrigger);
+
+        // Initial check for auto-login
+        if (!sessionStorage.getItem('autoLoginCancelled')) {
+            handleLogin(false);
+        }
+
+        return () => {
+            window.removeEventListener('trigger-wallet-auth', onManualTrigger);
+        };
     }, [isConnected, address, isAuthenticated, fetchNonce, login, navigate]);
 
     return null;

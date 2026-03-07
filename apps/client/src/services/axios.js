@@ -97,9 +97,8 @@ http.interceptors.response.use(
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      // Stop the refresh loop. Let the UI handle the unauthorized state via AuthContext/ProtectedRoute
+      // window.location.reload(); 
     }
 
     return Promise.reject(normalizedError);

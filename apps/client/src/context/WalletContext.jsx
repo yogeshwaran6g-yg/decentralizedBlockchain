@@ -77,7 +77,8 @@ export const WalletProvider = ({ children }) => {
     }, [address, isConnected]);
 
     const fetchStakeHistory = useCallback(async () => {
-        if (!isConnected || !address) return;
+        const token = localStorage.getItem('authToken');
+        if (!isConnected || !address || !token) return;
 
         try {
             const result = await api.get(API_ENDPOINTS.WALLET.STAKE_HISTORY, {}, {

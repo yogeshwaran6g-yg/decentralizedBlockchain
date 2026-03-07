@@ -48,13 +48,12 @@ export const useVerifySignature = () => {
  */
 export const useLogin = () => {
     const { address } = useAccount();
-    const { setUser, setIsAuthenticated } = useAuthContext();
+    const { setUser, setIsAuthenticated, isLoggingIn, setIsLoggingIn } = useAuthContext();
     const { signMessageAsync, isPending: isSigning } = useSignMessage();
     const { disconnect } = useDisconnect();
     const verifyMutation = useVerifySignature();
     const verifyMutationRef = useRef(verifyMutation);
     verifyMutationRef.current = verifyMutation;
-    const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     const login = useCallback(async (nonce) => {
         if (!nonce) {
@@ -62,6 +61,7 @@ export const useLogin = () => {
             return;
         }
 
+        setIsLoggingIn(true);
         try {
             const origin = window.location.origin;
             const message = `Sign this message to authenticate with our dApp.\n\nURI: ${origin}\nNonce: ${nonce}`;
@@ -81,7 +81,10 @@ export const useLogin = () => {
             if (error.code === 4001 || error.message?.includes('User rejected')) {
                 // Logout/Disconnect if user cancels signature
                 try {
-                    disconnect();
+                    // Only disconnect if we have a valid connector and it won't crash
+                    if (typeof disconnect === 'function') {
+                        disconnect();
+                    }
                 } catch (discErr) {
                     console.error('Error disconnecting after cancel:', discErr);
                 }
@@ -89,8 +92,10 @@ export const useLogin = () => {
                 toast.error(error.message || 'Authentication failed');
             }
             throw error;
+        } finally {
+            setIsLoggingIn(false);
         }
-    }, [address, verifyMutationRef, setUser, setIsAuthenticated, disconnect]);
+    }, [address, verifyMutationRef, setUser, setIsAuthenticated, setIsLoggingIn, disconnect, signMessageAsync]);
     return { login, isLoggingIn };
 };
 

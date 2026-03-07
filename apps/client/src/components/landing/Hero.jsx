@@ -11,23 +11,28 @@ export default function Hero() {
     const { open } = useAppKit()
     const navigate = useNavigate()
     const { address, isConnected } = useAccount()
-    const { isAuthenticated } = useAuthContext()
+    const { isAuthenticated, isLoggingIn } = useAuthContext()
 
     const handleConnectClick = () => {
-        if (!isAuthenticated) {
+        if (!isConnected) {
             open()
+        } else if (!isAuthenticated) {
+            // Manually trigger the WalletAuthListener
+            window.dispatchEvent(new CustomEvent('trigger-wallet-auth'));
         } else {
             navigate('/slot-activation')
         }
     }
 
-    const isWorking = false
+    // const isWorking = false; // removed
 
     const getButtonLabel = () => {
         if (!isConnected) return 'Connect Wallet'
-        if (!isAuthenticated) return 'Sign to Login'
+        if (!isAuthenticated) return 'Authenticating...'
         return 'Enter Dashboard'
     }
+
+    const isWorking = isLoggingIn
 
     const getButtonIcon = () => {
         return <Wallet size={24} />

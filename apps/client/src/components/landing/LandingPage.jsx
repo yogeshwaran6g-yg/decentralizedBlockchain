@@ -17,7 +17,7 @@ function LandingPage() {
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const { isConnected } = useAccount()
-    const { isAuthenticated } = useAuthContext()
+    const { isAuthenticated, isLoggingIn } = useAuthContext()
 
     // Capture referral code
     React.useEffect(() => {
@@ -29,8 +29,11 @@ function LandingPage() {
     }, [searchParams]);
 
     const handleConnectClick = () => {
-        if (!isAuthenticated) {
+        if (!isConnected) {
             open()
+        } else if (!isAuthenticated) {
+            // Manually trigger the WalletAuthListener
+            window.dispatchEvent(new CustomEvent('trigger-wallet-auth'));
         } else {
             navigate('/dashboard')
         }
