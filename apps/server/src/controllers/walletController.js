@@ -19,8 +19,7 @@ export const getWalletBalance = async (req, res) => {
             address,
             polBalance: balances.polBalance,
             usdtBalance: balances.usdtBalance,
-            ethBalance: balances.ethBalance,
-            ownTokenBalance: internalInfo.data?.own_token || 0,
+            own_token: internalInfo.data?.own_token || 0,
             energyBalance: internalInfo.data?.energy_balance || 0,
             lockedBalance: internalInfo.data?.locked_balance || 0
         };
@@ -33,11 +32,11 @@ export const getWalletBalance = async (req, res) => {
 };
 
 
-export const getTestEth = async (req, res) => {
+export const getFaucet = async (req, res) => {
     try {
         return rtnRes(res, 200, "The internal faucet is currently disabled. Please use an official Polygon Amoy faucet for testnet POL/USDT.");
     } catch (err) {
-        console.error("Error from getTestEth controller:", err);
+        console.error("Error from getFaucet controller:", err);
         return rtnRes(res, 500, "Internal Error in faucet");
     }
 };

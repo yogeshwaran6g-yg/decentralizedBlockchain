@@ -100,8 +100,8 @@ export const getWalletBalance = async (address) => {
 
 /**
  * Calculate the eligible level based on balance
- * @param {number} balance In ETH
- * @returns {number} Level ID (1-6)
+ * @param {number} balance In USDT
+ * @returns {number} Level ID (1-7)
  */
 export const calculateEligibleLevel = (balance) => {
     if (balance >= 1280) return 7;

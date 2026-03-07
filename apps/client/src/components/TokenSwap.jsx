@@ -108,12 +108,6 @@ const TokenSwap = () => {
     const toAmount = fromAmount
         ? (parseFloat(fromAmount.replace(/,/g, '')) * RATE).toFixed(2)
         : '0.00';
-    const fromUSD = fromAmount
-        ? `~$${(parseFloat(fromAmount.replace(/,/g, '')) * 42.5).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
-        : '~$0.00 USD';
-    const toUSD = toAmount
-        ? `~$${(parseFloat(toAmount) * 49.7).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
-        : '~$0.00 USD';
 
     const handleSwapTokens = () => {
         setFromToken(toToken);
@@ -173,7 +167,6 @@ const TokenSwap = () => {
                                         setFromAmount(val);
                                     }}
                                 />
-                                <span className="text-[10px] text-white/30 font-medium mt-1">{fromUSD}</span>
                             </div>
                             <button className="flex items-center gap-1.5 sm:gap-2 bg-white/5 hover:bg-white/10 transition-all px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/5 ml-2 sm:ml-3 shrink-0">
                                 <TokenIcon
@@ -225,7 +218,6 @@ const TokenSwap = () => {
                                     value={toAmount}
                                     readOnly
                                 />
-                                <span className="text-[10px] text-white/30 font-medium mt-1">{toUSD}</span>
                             </div>
                             <button className="flex items-center gap-1.5 sm:gap-2 bg-white/5 hover:bg-white/10 transition-all px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-white/5 ml-2 sm:ml-3 shrink-0">
                                 <TokenIcon
@@ -258,7 +250,7 @@ const TokenSwap = () => {
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-xs text-white/50">Estimated Gas Fee</span>
-                            <span className="text-xs font-bold text-white/80">$7.24</span>
+                            <span className="text-xs font-bold text-white/80">0.05 POL</span>
                         </div>
                     </div>
 

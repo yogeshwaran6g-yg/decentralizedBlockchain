@@ -62,8 +62,8 @@ export default function Hero() {
 
                 {/* Coin 2 - Bottom Right */}
                 <motion.img
-                    src="https://cryptologos.cc/logos/ethereum-eth-logo.png"
-                    alt="Ethereum"
+                    src="https://cryptologos.cc/logos/polygon-matic-logo.png"
+                    alt="Polygon"
                     className="absolute w-32 h-32 lg:w-48 lg:h-48 opacity-15 filter blur-[3px]"
                     animate={{
                         y: [30, -30, 30],
@@ -179,10 +179,10 @@ export default function Hero() {
                     className="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8"
                 >
                     {[
-                        { label: 'Total Volume', value: '$2.4B+' },
+                        { label: 'Total Volume', value: '2.4B+' },
                         { label: 'Community', value: '150K+' },
                         { label: 'Partners', value: '85+' },
-                        { label: 'TVL Locked', value: '$840M' }
+                        { label: 'TVL Locked', value: '840M' }
                     ].map((stat, i) => (
                         <motion.div
                             key={i}

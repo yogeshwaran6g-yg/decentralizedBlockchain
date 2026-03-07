@@ -59,7 +59,7 @@ const ActivationModal = ({ isOpen, onClose, onConfirm, level, cost, usdtBalance,
                             <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-2xl border border-white/5">
                                 <div className="flex items-center justify-between">
                                     <span className="text-white/60 text-sm font-bold">Total Activation Cost</span>
-                                    <span className="text-3xl font-display font-black text-gold tracking-tight">{cost}$</span>
+                                    <span className="text-3xl font-display font-black text-gold tracking-tight">{cost} USDT</span>
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-white/5">
                                     <span className="text-green-500/60 text-[10px] font-black uppercase tracking-widest">Energy Reward</span>
@@ -80,7 +80,7 @@ const ActivationModal = ({ isOpen, onClose, onConfirm, level, cost, usdtBalance,
                                     <div className="flex flex-col gap-2 pt-2">
                                         <div className="flex justify-between text-[10px] uppercase font-black tracking-widest">
                                             <span className="text-white/40">Required:</span>
-                                            <span className="text-white">{cost} $ / OWN</span>
+                                            <span className="text-white">{cost} USDT / OWN</span>
                                         </div>
                                         <div className="flex justify-between text-[10px] uppercase font-black tracking-widest">
                                             <span className="text-white/40">USDT Wallet:</span>

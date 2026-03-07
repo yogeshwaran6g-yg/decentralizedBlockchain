@@ -45,8 +45,8 @@ export const recordStakingTransaction = async (userId, amount, txHash) => {
             `, [userId, amount]);
 
             await client.query(`
-                INSERT INTO treasury_logs (type, asset, amount, usd_value, tx_hash, status) 
-                VALUES ('INFLOW', 'USDT', $1, $1, $2, 'CONFIRMED')
+                INSERT INTO treasury_logs (type, asset, amount, tx_hash, status) 
+                VALUES ('INFLOW', 'USDT', $1, $2, 'CONFIRMED')
             `, [amount, txHash]);
 
             return serviceResponse(true, 200, 'Staking transaction verified and recorded successfully');
@@ -153,7 +153,7 @@ export const updateWalletBalance = async (userId, type, amount) => {
             case 'NRG': column = 'energy_balance'; break;
             case 'DB': column = 'own_token'; break;
             case 'LOCKED': column = 'locked_balance'; break;
-            default: column = 'own_token_balance';
+            default: column = 'own_token';
         }
 
         await queryRunner(`

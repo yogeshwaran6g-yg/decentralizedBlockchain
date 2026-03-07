@@ -122,7 +122,7 @@ const SlotActivation = () => {
                             <div className="flex justify-between items-center gap-8 border-b border-white/5 pb-2">
                                 <span className="text-gold/40 text-[9px] uppercase font-bold tracking-widest">OWN TOKEN</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-gold font-display font-bold text-xs tracking-widest">{walletData?.ownTokenBalance || '0.00'} OWN</span>
+                                    <span className="text-gold font-display font-bold text-xs tracking-widest">{walletData?.own_token || '0.00'} OWN</span>
                                     <button
                                         onClick={handleTopUp}
                                         className="px-2 py-0.5 bg-gold/10 hover:bg-gold/20 border border-gold/30 rounded text-gold text-[8px] font-black uppercase transition-all"
@@ -170,7 +170,7 @@ const SlotActivation = () => {
                 level={modalLevel}
                 cost={modalCost}
                 usdtBalance={walletData?.usdtBalance || '0.00'}
-                dbBalance={walletData?.ownTokenBalance || '0.00'}
+                dbBalance={walletData?.own_token || '0.00'}
                 isPending={isPending}
             />
         </div>

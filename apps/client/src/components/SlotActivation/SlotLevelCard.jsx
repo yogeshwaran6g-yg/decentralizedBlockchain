@@ -17,7 +17,7 @@ const SlotLevelCard = ({ level, cost, earnings, isActive, status, onActivate, is
                 {/* Top Bar */}
                 <div className="w-full flex justify-between items-center mb-0.5">
                     <div className="bg-white/10 px-2 py-1 rounded-lg border border-white/10">
-                        <span className="text-white text-xs font-bold">{cost}$</span>
+                        <span className="text-sm font-display font-black text-gold/90">{cost} USDT</span>
                     </div>
 
                     {isPremium && (

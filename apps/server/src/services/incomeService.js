@@ -3,11 +3,11 @@ import { queryRunner } from '../config/db.js';
 /**
  * Distributes slot activation income across referrals and system funds
  * @param {number} userId - The user activating the slot
- * @param {number} totalPrice - The total cost of the slot in USD (Fake ETH equivalent)
+ * @param {number} totalPrice - The total cost of the slot in USDT
  */
 export const distributeIncome = async (userId, totalPrice) => {
     try {
-        console.log(`--- Starting Distribution for User ${userId}, Amount: $${totalPrice} ---`);
+        console.log(`--- Starting Distribution for User ${userId}, Amount: ${totalPrice} USDT ---`);
 
         // 1. Fetch Referral Path (Up to 4 levels)
         const referralPath = await getReferralPath(userId, 4);
@@ -36,7 +36,7 @@ export const distributeIncome = async (userId, totalPrice) => {
                 VALUES ($1, $2, $3, $4, 'COMMISSION')
             `, [referrer.id, userId, amount, i + 1]);
 
-            console.log(`[Distributed] $${amount} (OWN TOKEN) to Referrer L${i + 1} (User ID: ${referrer.id})`);
+            console.log(`[Distributed] ${amount} (OWN TOKEN) to Referrer L${i + 1} (User ID: ${referrer.id})`);
         }
 
         // Calculate overflow (Any part of the 50% not distributed due to short referral chain)
@@ -44,7 +44,7 @@ export const distributeIncome = async (userId, totalPrice) => {
         const overflowAmount = Math.max(0, maxReferralPool - totalReferralDistributed);
 
         if (overflowAmount > 0) {
-            console.log(`[Overflow] $${overflowAmount} redirected to ROYALTY fund`);
+            console.log(`[Overflow] ${overflowAmount} USDT redirected to ROYALTY fund`);
         }
 
         // 2. System Funds Split (Total 50% + Overflow)
@@ -66,7 +66,7 @@ export const distributeIncome = async (userId, totalPrice) => {
                 'UPDATE system_funds SET balance = balance + $1 WHERE fund_name = $2',
                 [amount, fund.name]
             );
-            console.log(`✓ Distributed $${amount} to System Fund: ${fund.name}${fund.overflow ? ' (Includes Overflow)' : ''}`);
+            console.log(`✓ Distributed ${amount} USDT to System Fund: ${fund.name}${fund.overflow ? ' (Includes Overflow)' : ''}`);
         }
 
         return { success: true };

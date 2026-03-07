@@ -30,7 +30,7 @@ export const API_ENDPOINTS = {
     // ── Wallet ──────────────────────────────────────────
     WALLET: {
         BALANCE: `${V1}/wallet/balance`,               // GET  — fetch on-chain balances
-        FAUCET: `${V1}/wallet/faucet`,                 // POST — request test eth
+        FAUCET: `${V1}/wallet/faucet`,                 // POST — request test tokens
         INFO: `${V1}/wallet/info`,                     // GET  — fetch DB token balances
         STAKE_HISTORY: `${V1}/wallet/stake-history`,   // GET  — fetch stake history
         STAKE_INTERNAL: `${V1}/wallet/stake-internal`, // POST — stake own tokens

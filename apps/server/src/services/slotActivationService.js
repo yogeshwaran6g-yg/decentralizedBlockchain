@@ -60,10 +60,10 @@ export const updateSlotActivation = async (userId, { current_level_id: currentLe
         // 1. Payment Verification / Balance Check
         if (paymentType === 'OWN_TOKEN') {
             const walletRes = await queryRunner('SELECT own_token FROM user_wallets WHERE user_id = $1', [userId]);
-            const ownTokenBalance = parseFloat(walletRes[0]?.own_token || '0');
+            const own_token = parseFloat(walletRes[0]?.own_token || '0');
 
-            if (ownTokenBalance < price) {
-                return serviceResponse(false, 403, `Insufficient Internal Token Balance! You need ${price} tokens for this slot. (Current: ${ownTokenBalance})`);
+            if (own_token < price) {
+                return serviceResponse(false, 403, `Insufficient Internal Token Balance! You need ${price} tokens for this slot. (Current: ${own_token})`);
             }
 
             // Deduct balance

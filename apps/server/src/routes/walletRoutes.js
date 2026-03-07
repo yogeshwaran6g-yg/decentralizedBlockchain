@@ -6,7 +6,7 @@ const router = express.Router();
 router.get('/balance', authMiddleware, walletController.getWalletBalance);
 router.get('/info', authMiddleware, walletController.getWalletInfo);
 router.get('/stake-history', authMiddleware, walletController.getStakeHistory);
-router.post('/faucet', authMiddleware, walletController.getTestEth);
+router.post('/faucet', authMiddleware, walletController.getFaucet);
 router.post('/stake-internal', authMiddleware, walletController.stakeInternal);
 router.post('/claim-rewards', authMiddleware, walletController.claimRewards);
 router.post('/topup-internal', authMiddleware, walletController.topUpInternal);

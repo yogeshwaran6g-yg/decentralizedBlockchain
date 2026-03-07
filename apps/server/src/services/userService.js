@@ -11,7 +11,7 @@ export const ensureUserProfile = async (userId, walletAddress) => {
 
         // Ensure wallet row exists — every user must have a wallet record
         await queryRunner(
-            `INSERT INTO user_wallets (user_id, energy_balance, own_token_balance, locked_balance)
+            `INSERT INTO user_wallets (user_id, energy_balance, own_token, locked_balance)
              VALUES ($1, 0, 0, 0)
              ON CONFLICT (user_id) DO NOTHING`,
             [userId]
@@ -151,9 +151,6 @@ export const getTreasuryMetrics = async () => {
     try {
         const query = `
             SELECT 
-                COALESCE(SUM(CASE WHEN type = 'INFLOW' THEN usd_value ELSE -usd_value END), 0) as total_balance,
-                COALESCE(SUM(CASE WHEN asset = 'ETH' AND type = 'INFLOW' THEN amount ELSE 0 END), 0) as eth_balance,
-                COALESCE(SUM(CASE WHEN asset = 'USDC' AND type = 'INFLOW' THEN amount ELSE 0 END), 0) as usdc_balance,
                 COALESCE(SUM(CASE WHEN asset = 'USDT' AND type = 'INFLOW' THEN amount ELSE 0 END), 0) as usdt_balance
             FROM treasury_logs
         `;

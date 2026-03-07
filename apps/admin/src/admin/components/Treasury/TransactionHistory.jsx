@@ -87,7 +87,7 @@ const TransactionHistory = () => {
                                     <td className="px-4 lg:px-6 py-2 lg:py-3">
                                         <div className="flex items-center gap-2 text-slate-200">
                                             <div className="size-4 lg:size-5 rounded-full bg-background-dark flex items-center justify-center overflow-hidden border border-white/5 font-bold text-[8px]">
-                                                {log.asset === 'ETH' ? 'Ξ' : '$'}
+                                                {log.asset === 'USDT' ? '$' : 'T'}
                                             </div>
                                             <span className="text-[9px] lg:text-[10px] font-medium">{log.asset}</span>
                                         </div>
@@ -96,7 +96,6 @@ const TransactionHistory = () => {
                                         <span className={`text-[9px] lg:text-[10px] font-bold tracking-tight ${log.type === 'INFLOW' ? 'text-green-400' : 'text-red-400'}`}>
                                             {log.type === 'INFLOW' ? '+' : '-'}{parseFloat(log.amount).toLocaleString()}
                                         </span>
-                                        <p className="text-[7px] lg:text-[8px] text-slate-500 font-bold">${parseFloat(log.usd_value).toLocaleString()}</p>
                                     </td>
                                     <td className="px-4 lg:px-6 py-2 lg:py-3">
                                         <div className="flex items-center gap-2">

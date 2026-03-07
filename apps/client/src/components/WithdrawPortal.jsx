@@ -8,14 +8,14 @@ const WithdrawPortal = () => {
     const balances = [
         { name: 'Energy Token', symbol: 'NRG', amount: '250.00', icon: 'bolt', status: 'Claimable', statusColor: 'text-green-400 bg-green-400/10' },
         { name: 'Own Token', symbol: 'OWN', amount: '1,200.0', icon: 'token', status: 'Available', statusColor: 'text-blue-400 bg-blue-400/10' },
-        { name: 'Royalty Rewards', symbol: 'ETH', amount: '0.45', icon: 'workspace_premium', status: 'Pending', statusColor: 'text-yellow-500/80 bg-yellow-500/10' },
+        { name: 'Royalty Rewards', symbol: 'USDT', amount: '45.00', icon: 'workspace_premium', status: 'Pending', statusColor: 'text-yellow-500/80 bg-yellow-500/10' },
         { name: 'Referral Rewards', symbol: 'OWN', amount: '150.00', icon: 'diversity_3', status: 'Pending', statusColor: 'text-yellow-500/80 bg-yellow-500/10' },
         { name: 'Staking Rewards', symbol: 'OWN', amount: '85.50', icon: 'layers', status: 'Pending', statusColor: 'text-yellow-500/80 bg-yellow-500/10' },
     ];
 
     const recentWithdrawals = [
         { date: 'Oct 24, 2023', time: '14:22 PM', asset: 'OWN Token', amount: '500.00 OWN', status: 'Completed', txHash: '0x4f2...71e4', icon: 'token' },
-        { date: 'Oct 22, 2023', time: '09:15 AM', asset: 'Ethereum', amount: '0.25 ETH', status: 'Pending', txHash: '0x2a1...bc90', icon: 'currency_bitcoin' },
+        { date: 'Oct 22, 2023', time: '09:15 AM', asset: 'USDT Token', amount: '25.00 USDT', status: 'Pending', txHash: '0x2a1...bc90', icon: 'token' },
         { date: 'Oct 18, 2023', time: '18:45 PM', asset: 'NRG Token', amount: '1,250.00 NRG', status: 'Completed', txHash: '0x992...2e0f', icon: 'bolt' },
     ];
 
@@ -67,7 +67,7 @@ const WithdrawPortal = () => {
                                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white appearance-none focus:ring-2 focus:ring-gold-main/50 outline-none transition-all cursor-pointer"
                                             >
                                                 <option className="bg-primary">OWN Token</option>
-                                                <option className="bg-primary">Ethereum (ETH)</option>
+                                                <option className="bg-primary">USDT Token</option>
                                                 <option className="bg-primary">Energy Token (NRG)</option>
                                             </select>
                                             <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-silver pointer-events-none">expand_more</span>
@@ -123,13 +123,13 @@ const WithdrawPortal = () => {
                             <div className="flex justify-between items-center py-3 border-b border-white/5">
                                 <span className="text-silver/60 text-sm">Selected Network</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-white text-sm font-semibold">Ethereum Mainnet</span>
+                                    <span className="text-white text-sm font-semibold">Polygon POS</span>
                                     <span className="size-2 rounded-full bg-green-500"></span>
                                 </div>
                             </div>
                             <div className="flex justify-between items-center py-3 border-b border-white/5">
                                 <span className="text-silver/60 text-sm">Estimated Gas Fee</span>
-                                <span className="text-white text-sm font-semibold">0.0024 ETH ($4.85)</span>
+                                <span className="text-white text-sm font-semibold">0.05 POL</span>
                             </div>
                             <div className="flex justify-between items-center py-3 border-b border-white/5">
                                 <span className="text-silver/60 text-sm">Processing Time</span>
@@ -179,8 +179,8 @@ const WithdrawPortal = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
-                                                <div className={`size-6 rounded-full flex items-center justify-center ${tx.asset === 'Ethereum' ? 'bg-blue-500/20' : 'bg-gold-main/20'}`}>
-                                                    <span className={`material-symbols-outlined text-[14px] ${tx.asset === 'Ethereum' ? 'text-blue-400' : 'text-gold-main'}`}>{tx.icon}</span>
+                                                <div className={`size-6 rounded-full flex items-center justify-center bg-gold-main/20`}>
+                                                    <span className={`material-symbols-outlined text-[14px] text-gold-main`}>{tx.icon}</span>
                                                 </div>
                                                 <span className="text-sm font-semibold text-white">{tx.asset}</span>
                                             </div>

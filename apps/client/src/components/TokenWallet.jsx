@@ -46,7 +46,7 @@ const transactions = [
     },
 ];
 
-const TokenCard = ({ icon, title, subtitle, balance, usdValue, change, actions, highlighted, onEdit }) => (
+const TokenCard = ({ icon, title, subtitle, balance, change, actions, highlighted, onEdit }) => (
     <div
         className={`glass-card rounded-2xl p-4 sm:p-6 md:p-8 relative overflow-hidden group border ${highlighted ? 'border-[#D4AF37]/30' : 'border-[#D4AF37]/10'
             }`}
@@ -90,9 +90,7 @@ const TokenCard = ({ icon, title, subtitle, balance, usdValue, change, actions, 
 
         {/* Balance */}
         <div className="mt-4 sm:mt-8 relative z-10">
-            <p className="text-[8px] sm:text-[10px] text-white/30 uppercase font-bold tracking-[0.2em] mb-1">Available Token</p>
             <h4 className="text-2xl sm:text-4xl font-mono font-bold text-white tracking-tight">{balance}</h4>
-            <p className="text-[#F9E076]/60 font-medium text-base sm:text-lg mt-1">≈ {usdValue}</p>
         </div>
 
         {/* Actions */}
@@ -135,11 +133,6 @@ const TokenWallet = () => {
     const formatBalance = (val) => {
         const num = parseFloat(val || '0');
         return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    };
-
-    const formatUSD = (val, rate) => {
-        const num = parseFloat(val || '0') * rate;
-        return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`;
     };
 
     const getTxIcon = (type, subtype) => {
@@ -212,7 +205,6 @@ const TokenWallet = () => {
                     title="Energy Token"
                     subtitle="NRG / GOVERNANCE"
                     balance={isWalletLoading ? "..." : formatBalance(walletData?.energyBalance)}
-                    usdValue={isWalletLoading ? "..." : formatUSD(walletData?.energyBalance, 0.45)}
                     change="+5.2%"
                     onEdit={() => handleEditBalance('NRG', walletData?.energyBalance || 0)}
                     actions={[
@@ -225,11 +217,10 @@ const TokenWallet = () => {
                     icon="star"
                     title="OWN Token"
                     subtitle="OWN / UTILITY"
-                    balance={isWalletLoading ? "..." : formatBalance(walletData?.ownTokenBalance)}
-                    usdValue={isWalletLoading ? "..." : formatUSD(walletData?.ownTokenBalance, 2.10)}
+                    balance={isWalletLoading ? "..." : formatBalance(walletData?.own_token)}
                     change="+12.8%"
                     highlighted
-                    onEdit={() => handleEditBalance('DB', walletData?.ownTokenBalance || 0)}
+                    onEdit={() => handleEditBalance('DB', walletData?.own_token || 0)}
                     actions={[
                         { label: 'Deposit', icon: 'south_west' },
                         { label: 'Withdraw', icon: 'north_east' },
